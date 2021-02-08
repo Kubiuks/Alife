@@ -113,7 +113,7 @@ func (g *Grid) validateXY(x, y int) error {
 	return nil
 }
 
-func (g *Grid) Dump(fn func(c lib.Agent) bool) [][]interface{} {
+func (g *Grid) Dump(fn func(c lib.Agent) int) [][]interface{} {
 	g.mx.RLock()
 	defer g.mx.RUnlock()
 

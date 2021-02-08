@@ -23,11 +23,15 @@ func main() {
 		grid2D.SetCell(cell.X(), cell.Y(), cell)
 	}
 
-	a.LimitIterations(999)
+	a.LimitIterations(9999)
 
 	ch := make(chan [][]interface{})
 	a.SetReportFunc(func(a *lib.ABM) {
-		ch <- grid2D.Dump(func(a lib.Agent) bool { return a != nil })
+		ch <- grid2D.Dump(func(a lib.Agent) int {
+			if a == nil {
+				return 0
+			}
+			return 1})
 	})
 
 	go func() {
