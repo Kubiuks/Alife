@@ -67,13 +67,25 @@ func (g *GridWidget) SetGrid(dump [][]interface{}) {
 	}
 }
 
-func (g *GridWidget) DrawCell(m *image.RGBA, x, y int, enabled int) {
+func (g *GridWidget) DrawCell(m *image.RGBA, x, y int, agent int) {
 	offX, offY := 10, 10
 	X := offX + x*g.SquareSize
 	Y := offY + y*g.SquareSize
+	colors := []*image.Uniform{image.NewUniform(color.RGBA{255, 0, 0, 0}),
+							   image.NewUniform(color.RGBA{0, 250, 0, 0}),
+							   image.NewUniform(color.RGBA{0, 0, 255, 0}),
+							   image.NewUniform(color.RGBA{255, 0, 255, 0}),
+							   image.NewUniform(color.RGBA{0, 255, 255, 0}),
+							   image.NewUniform(color.RGBA{255, 140, 0, 0})}
 	col := image.Black
-	if enabled == 1{
-		col = image.White
+	// agents start from 1
+	if agent != 0{
+		if agent == -1{
+			col = image.NewUniform(color.RGBA{255, 255, 0, 0})
+		} else {
+			agent--
+			col = colors[agent%6]
+		}
 	}
 	r := image.Rect(X+1, Y+1, X+g.SquareSize-1, Y+g.SquareSize-1)
 	draw.Draw(m, r, col, image.ZP, draw.Src)

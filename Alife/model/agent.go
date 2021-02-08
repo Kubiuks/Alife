@@ -7,9 +7,9 @@ import (
 	"Alife/lib"
 )
 
-// Walker implements abm.Agent and worlds.XY and
+// Agent implements abm.Agent and worlds.XY and
 // walks randomly over 2D grid.
-type Walker struct {
+type Agent struct {
 	id 			 int
 	x, y         int
 	origx, origy int
@@ -17,20 +17,20 @@ type Walker struct {
 	trail        bool // leave trail?
 }
 
-func (w *Walker) ID() int {
+func (w *Agent) ID() int {
 	return w.id
 }
 
-func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Walker, error) {
+func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Agent, error) {
 	world := abm.World()
 	if world == nil {
-		return nil, errors.New("Walker needs a World defined to operate")
+		return nil, errors.New("Agent needs a World defined to operate")
 	}
 	grid, ok := world.(*Grid)
 	if !ok {
-		return nil, errors.New("Walker needs a Grid world to operate")
+		return nil, errors.New("Agent needs a Grid world to operate")
 	}
-	return &Walker{
+	return &Agent{
 		id:    id,
 		origx: x,
 		origy: y,
@@ -41,7 +41,7 @@ func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Walker, error) {
 	}, nil
 }
 
-func (w *Walker) Run() {
+func (w *Agent) Run() {
 	rx := rand.Intn(4)
 	oldx, oldy := w.x, w.y
 	switch rx {
@@ -67,5 +67,5 @@ func (w *Walker) Run() {
 	}
 }
 
-func (w *Walker) X() int { return w.x }
-func (w *Walker) Y() int { return w.y }
+func (w *Agent) X() int { return w.x }
+func (w *Agent) Y() int { return w.y }

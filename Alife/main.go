@@ -14,7 +14,8 @@ func main() {
 	w, h := 99, 99
 	grid2D := model.NewWorld(w, h)
 	a.SetWorld(grid2D)
-	for i:=0; i<5; i++ {
+	//start from 1 coz 0 is empty cell
+	for i:=1; i<7; i++ {
 		cell, err := model.NewAgent(a, i, rand.Intn(w-1), rand.Intn(h-1), true)
 		if err != nil {
 			log.Fatal(err)
@@ -23,7 +24,9 @@ func main() {
 		grid2D.SetCell(cell.X(), cell.Y(), cell)
 	}
 
-	a.LimitIterations(9999)
+	addFood(5, 5, a, grid2D)
+
+	a.LimitIterations(999)
 
 	ch := make(chan [][]interface{})
 	a.SetReportFunc(func(a *lib.ABM) {
@@ -31,7 +34,7 @@ func main() {
 			if a == nil {
 				return 0
 			}
-			return 1})
+			return a.ID()})
 	})
 
 	go func() {
@@ -43,4 +46,13 @@ func main() {
 	defer ui.Stop()
 	ui.AddGrid(ch)
 	ui.Loop()
+}
+
+func addFood(x, y int, a *lib.ABM, grid2D *model.Grid) {
+	cell, err := model.NewFood(a, x, y)
+	if err != nil {
+		log.Fatal(err)
+	}
+	a.AddAgent(cell)
+	grid2D.SetCell(cell.X(), cell.Y(), cell)
 }
