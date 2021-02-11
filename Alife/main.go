@@ -14,23 +14,21 @@ func main() {
 	w, h := 99, 99
 	grid2D := model.NewWorld(w, h)
 	a.SetWorld(grid2D)
-	//start from 1 coz 0 is empty cell
+	//start from 1 coz id 0 is empty cell
 	for i:=1; i<7; i++ {
-		cell, err := model.NewAgent(a, i, rand.Intn(w-1), rand.Intn(h-1), true)
-		if err != nil {
-			log.Fatal(err)
-		}
-		a.AddAgent(cell)
-		grid2D.SetCell(cell.X(), cell.Y(), cell)
+		x, y := rand.Intn(w-1), rand.Intn(h-1)
+		addAgent(x, y, i, a, grid2D, false)
 	}
 
 	addFood(5, 5, a, grid2D)
 
-	a.LimitIterations(999)
+	a.LimitIterations(10000000)
 
-	ch := make(chan [][]interface{})
+	chGrid := make(chan [][]interface{})
+	//chAlive := make(chan int)
 	a.SetReportFunc(func(a *lib.ABM) {
-		ch <- grid2D.Dump(func(a lib.Agent) int {
+		chGrid <- grid2D.Dump(func(a lib.Agent) int {
+			//time.Sleep(10*time.Microsecond)
 			if a == nil {
 				return 0
 			}
@@ -39,13 +37,22 @@ func main() {
 
 	go func() {
 		a.StartSimulation()
-		close(ch)
+		close(chGrid)
 	}()
 
 	ui := model.NewUI(w, h)
 	defer ui.Stop()
-	ui.AddGrid(ch)
+	ui.AddGrid(chGrid)
 	ui.Loop()
+}
+
+func addAgent(x, y, id int, a *lib.ABM, grid2D *model.Grid, trail bool) {
+	cell, err := model.NewAgent(a, id, x, y, trail)
+	if err != nil {
+		log.Fatal(err)
+	}
+	a.AddAgent(cell)
+	grid2D.SetCell(cell.X(), cell.Y(), cell)
 }
 
 func addFood(x, y int, a *lib.ABM, grid2D *model.Grid) {

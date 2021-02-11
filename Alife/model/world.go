@@ -32,11 +32,12 @@ func (g *Grid) Tick() {
 
 	for i := 0; i < g.size(); i++ {
 		g.cellsPrev[i] = lib.CopyAgent(g.cells[i])
+
 	}
 
 }
 
-func (g *Grid) Move(fromX, fromY, toX, toY int) error {
+func (g *Grid) Move(id, fromX, fromY, toX, toY int) error {
 	if err := g.validateXY(fromX, fromY); err != nil {
 		return err
 	}
@@ -46,13 +47,38 @@ func (g *Grid) Move(fromX, fromY, toX, toY int) error {
 	g.mx.Lock()
 	defer g.mx.Unlock()
 
-	agent := g.cells[g.idx(fromX, fromY)]
-	g.cells[g.idx(toX, toY)] = agent
-	g.cells[g.idx(fromX, fromY)] = nil
+	agentFrom := g.cells[g.idx(fromX, fromY)]
+	agentTo := g.cells[g.idx(toX, toY)]
+	if agentFrom.ID() == id{
+		g.cells[g.idx(fromX, fromY)] = nil
+		if agentTo == nil {
+			g.cells[g.idx(toX, toY)] = agentFrom
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agentFrom)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agentFrom)
+			g.cells[g.idx(toX, toY)] = holder
+		}
+	} else {
+		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
+		g.cells[g.idx(fromX, fromY)] = agentFromPost
+		if agentTo == nil {
+			g.cells[g.idx(toX, toY)] = agent
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agent)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agent)
+			g.cells[g.idx(toX, toY)] = holder
+		}
+	}
 	return nil
 }
 
-func (g *Grid) Copy(fromX, fromY, toX, toY int) error {
+func (g *Grid) Copy(id, fromX, fromY, toX, toY int) error {
 	if err := g.validateXY(fromX, fromY); err != nil {
 		return err
 	}
@@ -62,8 +88,33 @@ func (g *Grid) Copy(fromX, fromY, toX, toY int) error {
 	g.mx.Lock()
 	defer g.mx.Unlock()
 
-	agent := g.cells[g.idx(fromX, fromY)]
-	g.cells[g.idx(toX, toY)] = agent
+	agentFrom := g.cells[g.idx(fromX, fromY)]
+	agentTo := g.cells[g.idx(toX, toY)]
+	if agentFrom.ID() == id{
+		if agentTo == nil {
+			g.cells[g.idx(toX, toY)] = agentFrom
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agentFrom)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agentFrom)
+			g.cells[g.idx(toX, toY)] = holder
+		}
+	} else {
+		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
+		g.cells[g.idx(fromX, fromY)] = agentFromPost
+		if agentTo == nil {
+			g.cells[g.idx(toX, toY)] = agent
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agent)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agent)
+			g.cells[g.idx(toX, toY)] = holder
+		}
+	}
 	return nil
 }
 
@@ -81,12 +132,18 @@ func (g *Grid) SetCell(x, y int, c lib.Agent) {
 		panic(err)
 	}
 	g.mx.Lock()
-	g.cells[g.idx(x, y)] = c
+	temp := g.cells[g.idx(x, y)]
+	if temp == nil {
+		g.cells[g.idx(x, y)] = c
+	} else if temp.ID() == -2{
+		temp.(*HolderAgent).AddAgent(c)
+	} else {
+		holder := NewHolderAgent(g, x, y)
+		holder.AddAgent(temp)
+		holder.AddAgent(c)
+		g.cells[g.idx(x, y)] = holder
+	}
 	g.mx.Unlock()
-}
-
-func (g *Grid) ClearCell(x, y int) {
-	g.SetCell(x, y, nil)
 }
 
 func (g *Grid) Width() int {

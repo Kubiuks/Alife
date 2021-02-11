@@ -6,14 +6,10 @@ import (
 )
 
 type Food struct {
-	resource	 float64
+	resource	 float32
 	id 			 int
 	x, y         int
 	grid         *Grid
-}
-
-func (f *Food) ID() int {
-	return f.id
 }
 
 func NewFood(abm *lib.ABM, x, y int) (*Food, error) {
@@ -35,9 +31,12 @@ func NewFood(abm *lib.ABM, x, y int) (*Food, error) {
 }
 
 func (f *Food) Run() {
-	f.resource -= 0.01
+	if f.resource < 1 {
+		f.resource += 0.01
+	}
 }
 
+func (f *Food) ID() int { return f.id }
 func (f *Food) X() int { return f.x }
 func (f *Food) Y() int { return f.y }
 

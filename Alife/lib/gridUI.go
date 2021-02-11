@@ -82,6 +82,8 @@ func (g *GridWidget) DrawCell(m *image.RGBA, x, y int, agent int) {
 	if agent != 0{
 		if agent == -1{
 			col = image.NewUniform(color.RGBA{255, 255, 0, 0})
+		} else if agent == -2 {
+			col = image.White
 		} else {
 			agent--
 			col = colors[agent%6]

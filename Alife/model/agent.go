@@ -10,15 +10,18 @@ import (
 // Agent implements abm.Agent and worlds.XY and
 // walks randomly over 2D grid.
 type Agent struct {
+	alive		 bool
+	energy		 float32
 	id 			 int
 	x, y         int
 	origx, origy int
 	grid         *Grid
-	trail        bool // leave trail?
+	trail        bool
+	direction    int
 }
 
-func (w *Agent) ID() int {
-	return w.id
+func (a *Agent) ID() int {
+	return a.id
 }
 
 func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Agent, error) {
@@ -31,41 +34,81 @@ func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Agent, error) {
 		return nil, errors.New("Agent needs a Grid world to operate")
 	}
 	return &Agent{
-		id:    id,
-		origx: x,
-		origy: y,
-		x:     x,
-		y:     y,
-		grid:  grid,
-		trail: trail,
+		alive:  true,
+		energy: 1,
+		id:     id,
+		origx:  x,
+		origy:  y,
+		x:      x,
+		y:      y,
+		grid:   grid,
+		trail:  trail,
+		direction: rand.Intn(8),
 	}, nil
 }
 
-func (w *Agent) Run() {
-	rx := rand.Intn(4)
-	oldx, oldy := w.x, w.y
+func (a *Agent) Run() {
+	if !a.alive{
+		a.id = 0
+		return
+	}
+	rx := rand.Intn(8)
+	oldx, oldy := a.x, a.y
+	oldDirection := a.direction
 	switch rx {
+		/*
+		|0|1|2|
+		|7|x|3|
+		|6|5|4|
+		*/
 	case 0:
-		w.x++
+		a.x++
+		a.direction = 3
 	case 1:
-		w.y++
+		a.y++
+		a.direction = 5
 	case 2:
-		w.x--
+		a.x--
+		a.direction = 7
 	case 3:
-		w.y--
+		a.y--
+		a.direction = 1
+	case 4:
+		a.y--
+		a.x++
+		a.direction = 2
+	case 5:
+		a.y--
+		a.x--
+		a.direction = 0
+	case 6:
+		a.y++
+		a.x--
+		a.direction = 6
+	case 7:
+		a.y++
+		a.x++
+		a.direction = 4
 	}
 
 	var err error
-	if w.trail {
-		err = w.grid.Copy(oldx, oldy, w.x, w.y)
+	if a.trail {
+		err = a.grid.Copy(a.id, oldx, oldy, a.x, a.y)
 	} else {
-		err = w.grid.Move(oldx, oldy, w.x, w.y)
+		err = a.grid.Move(a.id, oldx, oldy, a.x, a.y)
 	}
 
 	if err != nil {
-		w.x, w.y = oldx, oldy
+		a.x, a.y = oldx, oldy
+		a.direction = oldDirection
+	} else {
+		//a.energy -= 0.001
+		if a.energy <= 0 {
+			a.alive = false
+		}
 	}
 }
 
-func (w *Agent) X() int { return w.x }
-func (w *Agent) Y() int { return w.y }
+func (a *Agent) Alive() bool { return a.alive }
+func (a *Agent) X() int { return a.x }
+func (a *Agent) Y() int { return a.y }
