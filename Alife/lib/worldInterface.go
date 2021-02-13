@@ -1,7 +1,7 @@
 package lib
 
 type World interface {
-	Tick() // mark the beginning of the next time period
+	Tick([]Agent) // mark the beginning of the next time period
 }
 
 // BorderRule represents rule of what happens when agent

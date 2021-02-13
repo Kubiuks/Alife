@@ -4,10 +4,9 @@ package model
 import (
 	"errors"
 	"math/rand"
-	"Alife/lib"
 )
 
-// Agent implements abm.Agent and worlds.XY and
+// Agent implements lib.Agent and
 // walks randomly over 2D grid.
 type Agent struct {
 	alive		 bool
@@ -20,11 +19,7 @@ type Agent struct {
 	direction    int
 }
 
-func (a *Agent) ID() int {
-	return a.id
-}
-
-func NewAgent(abm *lib.ABM, id, x, y int, trail bool) (*Agent, error) {
+func NewAgent(abm *ABM, id, x, y int, trail bool) (*Agent, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("Agent needs a World defined to operate")
@@ -57,38 +52,38 @@ func (a *Agent) Run() {
 	oldDirection := a.direction
 	switch rx {
 		/*
-		|0|1|2|
-		|7|x|3|
-		|6|5|4|
+		|5|4|3|
+		|6|x|2|
+		|7|0|1|
 		*/
 	case 0:
 		a.x++
-		a.direction = 3
+		a.direction = 2
 	case 1:
 		a.y++
-		a.direction = 5
+		a.direction = 0
 	case 2:
 		a.x--
-		a.direction = 7
+		a.direction = 6
 	case 3:
 		a.y--
-		a.direction = 1
+		a.direction = 4
 	case 4:
 		a.y--
 		a.x++
-		a.direction = 2
+		a.direction = 3
 	case 5:
 		a.y--
 		a.x--
-		a.direction = 0
+		a.direction = 5
 	case 6:
 		a.y++
 		a.x--
-		a.direction = 6
+		a.direction = 7
 	case 7:
 		a.y++
 		a.x++
-		a.direction = 4
+		a.direction = 1
 	}
 
 	var err error
@@ -108,7 +103,8 @@ func (a *Agent) Run() {
 		}
 	}
 }
-
+func (a *Agent) ID() int { return a.id }
+func (a *Agent) Direction() int { return a.direction }
 func (a *Agent) Alive() bool { return a.alive }
-func (a *Agent) X() int { return a.x }
-func (a *Agent) Y() int { return a.y }
+func (a *Agent) X() int      { return a.x }
+func (a *Agent) Y() int      { return a.y }

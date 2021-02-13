@@ -6,6 +6,8 @@ import (
 
 type Agent interface {
 	ID() int
+	X()  int
+	Y()	 int
 	Run()
 }
 

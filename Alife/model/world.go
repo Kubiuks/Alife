@@ -1,40 +1,70 @@
 package model
 
 import (
-	"errors"
-	"sync"
 	"Alife/lib"
+	"errors"
+	"math"
+	"sync"
 )
 
 type Grid struct {
 	mx            sync.RWMutex
 	width, height int
-
-	cells, cellsPrev []lib.Agent
+	visionLength int
+	visionAngle  int
+	cells []lib.Agent
+	agentVision [][]lib.Agent
+	visionVectors []directionVectors
 }
 
-func NewWorld(width, height int) *Grid {
+type directionVectors struct {
+	leftVector vector
+	rightVector vector
+}
+
+type vector struct {
+	x, y float64
+}
+
+func NewWorld(width, height, numberOfAgents, visionLength, visionAngle int) *Grid {
 	g := &Grid{
 		width:  width,
 		height: height,
+		visionLength: visionLength,
+		visionAngle: visionAngle,
 	}
-
-	g.initSlices()
+	g.cells = make([]lib.Agent, g.size())
+	g.agentVision = make([][]lib.Agent, numberOfAgents)
+	for i := 0; i < numberOfAgents; i++ {
+		g.agentVision[i] = make([]lib.Agent, 0)
+	}
+	g.initialiseVisionVectors()
 
 	return g
 }
 
 // Tick marks beginning of the new time period.
 // Implements World interface.
-func (g *Grid) Tick() {
+func (g *Grid) Tick(agents []lib.Agent) {
 	g.mx.RLock()
 	defer g.mx.RUnlock()
+	l := len(agents)
+	for j := 0; j < l; j++ {
+		if agent, ok := agents[j].(*Agent); ok {
+			//direction := agent.direction
+			agentx, agenty := agent.x, agent.y
+			for k := 0; k < l; k++ {
+				if agents[j] == agents[k] {
+					continue
+				}
+				x, y := agents[k].X(), agents[k].Y()
+				distance := math.Sqrt(math.Pow(float64(agentx-x),2)+math.Pow(float64(agenty-y),2))
+				if distance <= 20{
 
-	for i := 0; i < g.size(); i++ {
-		g.cellsPrev[i] = lib.CopyAgent(g.cells[i])
-
+				}
+			}
+		}
 	}
-
 }
 
 func (g *Grid) Move(id, fromX, fromY, toX, toY int) error {
@@ -185,10 +215,10 @@ func (g *Grid) Dump(fn func(c lib.Agent) int) [][]interface{} {
 	return ret
 }
 
-// just move this verbose initialization here for brevity.
-func (g *Grid) initSlices() {
-	g.cells = make([]lib.Agent, g.size())
-	g.cellsPrev = make([]lib.Agent, g.size())
+func (g *Grid) initialiseVisionVectors() {
+	g.visionVectors = make([]directionVectors, 8)
+	g.visionVectors[0].leftVector = vector{0, 1}
+	g.visionVectors[0].rightVector = vector{0, 0}
 }
 
 func (g *Grid) size() int {

@@ -1,7 +1,6 @@
-package model
+package lib
 
 import (
-	"Alife/lib"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/key"
@@ -16,14 +15,11 @@ type UI struct {
 	width, height int
 	ch            <-chan [][]interface{}
 
-	grid *lib.GridWidget
+	grid *GridWidget
 
 	window screen.Window
 	buffer screen.Buffer
 }
-
-var _ lib.UI = &UI{}
-var _ lib.Grid = &UI{}
 
 const (
 	winWidth  = 800
@@ -42,7 +38,7 @@ func (ui *UI) Stop() {
 }
 
 func (ui *UI) AddGrid(ch <-chan [][]interface{}) {
-	ui.grid = lib.NewGridWidget(ui.width+1, ui.height+1, winWidth, winHeight)
+	ui.grid = NewGridWidget(ui.width+1, ui.height+1, winWidth, winHeight)
 	ui.ch = ch
 }
 

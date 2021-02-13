@@ -48,6 +48,9 @@ func (h *HolderAgent) DeleteAgent(id int) (lib.Agent, lib.Agent){
 }
 
 func (h *HolderAgent) ID() int { return h.id }
+func (h *HolderAgent) X() int { return h.x }
+func (h *HolderAgent) Y() int { return h.y }
+
 func (h *HolderAgent) Agents() []lib.Agent {
 	h.mx.RLock()
 	defer h.mx.RUnlock()
