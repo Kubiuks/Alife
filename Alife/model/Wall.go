@@ -14,7 +14,7 @@ func NewWall(x, y int) *Wall {
 }
 
 
-
+func (w *Wall) Run() { return }
 func (w *Wall) ID() int { return w.id }
 func (w *Wall) X() int { return w.x }
 func (w *Wall) Y() int { return w.y }

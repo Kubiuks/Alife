@@ -1,8 +1,8 @@
 package model
 
-
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 )
 
@@ -43,19 +43,32 @@ func NewAgent(abm *ABM, id, x, y int, trail bool) (*Agent, error) {
 }
 
 func (a *Agent) Run() {
-	if !a.alive{
-		a.id = 0
-		return
+	for _,agent := range a.grid.agentVision[a.id-1] {
+		if agent.ID() == -1 {
+			fmt.Printf("I see food at (%v,%v)\n", agent.X(), agent.Y())
+		} else if agent.ID() == -3 {
+			//fmt.Printf("I see the Wall at (%v,%v)\n", agent.X(), agent.Y())
+		} else {
+			//fmt.Printf("I see an agent at (%v,%v)\n", agent.X(), agent.Y())
+		}
 	}
+	//if !a.alive{
+	//	a.id = 0
+	//	return
+	//}
+	a.move()
+}
+
+func (a *Agent) move(){
 	rx := rand.Intn(8)
 	oldx, oldy := a.x, a.y
 	oldDirection := a.direction
 	switch rx {
-		/*
+	/*
 		|5|4|3|
 		|6|x|2|
 		|7|0|1|
-		*/
+	*/
 	case 0:
 		a.x++
 		a.direction = 2

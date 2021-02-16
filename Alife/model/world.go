@@ -3,6 +3,7 @@ package model
 import (
 	"Alife/lib"
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 )
@@ -15,6 +16,7 @@ type Grid struct {
 	cells []lib.Agent
 	agentVision [][]lib.Agent
 	visionVectors []directionVectors
+	walls []directionVectors
 }
 
 type directionVectors struct {
@@ -36,10 +38,14 @@ func NewWorld(width, height, numberOfAgents, visionLength, visionAngle int) *Gri
 	g.cells = make([]lib.Agent, g.size())
 	g.agentVision = make([][]lib.Agent, numberOfAgents)
 	for i := 0; i < numberOfAgents; i++ {
-		g.agentVision[i] = make([]lib.Agent, 0)
+		g.agentVision[i] = nil
 	}
-	g.initialiseVisionVectors()
-
+	g.initialiseVisionVectors(visionLength, visionAngle)
+	g.walls = make([]directionVectors, 4)
+	g.initialiseWalls(width, height)
+	//g.testVision()
+	//g.testIntersection()
+	//g.testWalldetection()
 	return g
 }
 
@@ -51,16 +57,26 @@ func (g *Grid) Tick(agents []lib.Agent) {
 	l := len(agents)
 	for j := 0; j < l; j++ {
 		if agent, ok := agents[j].(*Agent); ok {
-			//direction := agent.direction
-			agentx, agenty := agent.x, agent.y
+			g.agentVision[agent.ID()-1] = nil
+			center := vector{float64(agent.x), float64(agent.y)}
+			leftVisionEnd := vector{g.visionVectors[agent.direction].leftVector.x+center.x,
+									g.visionVectors[agent.direction].leftVector.y+center.y}
+			rightVisionEnd := vector{ g.visionVectors[agent.direction].rightVector.x+center.x,
+									  g.visionVectors[agent.direction].rightVector.y+center.y}
+			for i:=0;i<4;i++{
+				if wall := g.checkWallInSigth(i, center, leftVisionEnd, rightVisionEnd); wall != nil{
+					newWall := NewWall(int(math.Round(wall.(vector).x)),int(math.Round(wall.(vector).y)))
+					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], newWall)
+				}
+			}
 			for k := 0; k < l; k++ {
 				if agents[j] == agents[k] {
 					continue
 				}
-				x, y := agents[k].X(), agents[k].Y()
-				distance := math.Sqrt(math.Pow(float64(agentx-x),2)+math.Pow(float64(agenty-y),2))
-				if distance <= 20{
-
+				point := vector{float64(agents[k].X()), float64(agents[k].Y())}
+				if isInsideSector(center, point, g.visionVectors[agent.direction].leftVector,
+								  g.visionVectors[agent.direction].rightVector, g.visionLength){
+					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], agents[k])
 				}
 			}
 		}
@@ -215,10 +231,138 @@ func (g *Grid) Dump(fn func(c lib.Agent) int) [][]interface{} {
 	return ret
 }
 
-func (g *Grid) initialiseVisionVectors() {
+func isInsideSector(center, point, sectorLeft, sectorRight vector, radius int) bool {
+	relVector := vector{point.x - center.x, point.y - center.y}
+	return isWithinRadius(relVector, radius) &&
+		   !areClockwise(sectorRight, relVector) &&
+		   areClockwise(sectorLeft, relVector)
+}
+
+func areClockwise(v1, v2 vector) bool {
+	return -v1.y*v2.x + v1.x*v2.y > 0
+}
+func isWithinRadius(v vector, radius int) bool {
+	return v.x*v.x + v.y*v.y <= math.Pow(float64(radius), 2)
+}
+
+func (g *Grid) checkWallInSigth(wallId int, center, leftVisionEnd, rightVisionEnd vector) interface{}{
+	wallStart := g.walls[wallId].leftVector
+	wallEnd := g.walls[wallId].rightVector
+	leftIntersection := findIntersection(center, leftVisionEnd, wallStart, wallEnd)
+	rightIntersection := findIntersection(center, rightVisionEnd, wallStart, wallEnd)
+	if leftIntersection != nil && rightIntersection != nil {
+		return pointOnWallWithlowestDistance(center, wallStart, wallEnd, g.visionLength)
+	} else if leftIntersection != nil {
+		return pointOnWallWithlowestDistance(center, wallEnd, leftIntersection.(vector), g.visionLength)
+	} else if rightIntersection != nil {
+		return pointOnWallWithlowestDistance(center, wallStart, rightIntersection.(vector), g.visionLength)
+	}
+	return nil
+}
+
+func findIntersection(p0, p1, p2, p3 vector) interface{}{
+	s10X := p1.x - p0.x
+	s10Y := p1.y - p0.y
+	s32X := p3.x - p2.x
+	s32Y := p3.y - p2.y
+	denom := s10X*s32Y - s32X*s10Y
+	denomIsPositive := denom > 0
+	s02X := p0.x - p2.x
+	s02Y := p0.y - p2.y
+	sNumer := s10X*s02Y - s10Y*s02X
+	if (sNumer < 0) == denomIsPositive {
+		return nil
+	}
+	tNumer := s32X * s02Y - s32Y * s02X
+	if (tNumer < 0) == denomIsPositive {
+		return nil
+	}
+	if (sNumer > denom) == denomIsPositive || (tNumer > denom) == denomIsPositive {
+		return nil
+	}
+	t := tNumer / denom
+	intersectionPoint := vector{p0.x + (t * s10X), p0.y + (t * s10Y)}
+	return intersectionPoint
+}
+
+func pointOnWallWithlowestDistance(point, wallStart, wallEnd vector, visionLength int) interface{}{
+	A := point.x - wallStart.x
+	B := point.y - wallStart.y
+	C := wallEnd.x - wallStart.x
+	D := wallEnd.y - wallStart.y
+	dotProduct := A*C + B*D
+	lenSq := C * C + D * D
+	var xx, yy float64
+	param := dotProduct / lenSq
+	if param < 0 {
+		xx = wallStart.x
+		yy = wallStart.y
+	} else if param > 1 {
+		xx = wallEnd.x
+		yy = wallEnd.y
+	} else {
+		xx = wallStart.x + param * C
+		yy = wallStart.y + param * D
+	}
+	dx := point.x - xx
+	dy := point.y - yy
+	if math.Sqrt(dx * dx + dy * dy) <= float64(visionLength)/2 {
+		return vector{xx,yy}
+	}
+	return nil
+}
+
+/*
+	___1___
+	|     |
+	0     2
+	|__3__|
+ */
+func (g *Grid) initialiseWalls(width, height int) {
+	g.walls[0].leftVector = vector{-1,float64(height)}
+	g.walls[0].rightVector = vector{-1, -1}
+	g.walls[1].leftVector = vector{-1,-1}
+	g.walls[1].rightVector = vector{float64(width), -1}
+	g.walls[2].leftVector = vector{float64(width),-1}
+	g.walls[2].rightVector = vector{float64(width), float64(height)}
+	g.walls[3].leftVector = vector{float64(width),float64(height)}
+	g.walls[3].rightVector = vector{-1, float64(height)}
+}
+
+func (g *Grid) initialiseVisionVectors(visionLength, visionAngle int) {
 	g.visionVectors = make([]directionVectors, 8)
-	g.visionVectors[0].leftVector = vector{0, 1}
-	g.visionVectors[0].rightVector = vector{0, 0}
+	g.visionVectors[0].leftVector  = vector{float64(visionLength)*math.Sin((0+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+								 	 	    float64(visionLength)*math.Cos((0+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[0].rightVector = vector{float64(visionLength)*math.Sin((0-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((0-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[1].leftVector  = vector{float64(visionLength)*math.Sin((45+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((45+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[1].rightVector = vector{float64(visionLength)*math.Sin((45-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((45-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[2].leftVector  = vector{float64(visionLength)*math.Sin((90+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((90+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[2].rightVector = vector{float64(visionLength)*math.Sin((90-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((90-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[3].leftVector  = vector{float64(visionLength)*math.Sin((135+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((135+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[3].rightVector = vector{float64(visionLength)*math.Sin((135-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((135-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[4].leftVector  = vector{float64(visionLength)*math.Sin((180+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((180+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[4].rightVector = vector{float64(visionLength)*math.Sin((180-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((180-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[5].leftVector  = vector{float64(visionLength)*math.Sin((225+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((225+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[5].rightVector = vector{float64(visionLength)*math.Sin((225-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((225-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[6].leftVector  = vector{float64(visionLength)*math.Sin((270+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((270+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[6].rightVector = vector{float64(visionLength)*math.Sin((270-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((270-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[7].leftVector  = vector{float64(visionLength)*math.Sin((315+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+										    float64(visionLength)*math.Cos((315+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	g.visionVectors[7].rightVector = vector{float64(visionLength)*math.Sin((315-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+											float64(visionLength)*math.Cos((315-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
 }
 
 func (g *Grid) size() int {
@@ -227,4 +371,35 @@ func (g *Grid) size() int {
 
 func (g *Grid) idx(x, y int) int {
 	return y*g.width + x
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (g *Grid) testVision() {
+	fmt.Println("Testing Vision")
+	center := vector{50, 50}
+	point := vector{50, 60}
+	for j := 0; j < 8; j++ {
+		fmt.Println(isInsideSector(center, point, g.visionVectors[j].leftVector,
+			g.visionVectors[j].rightVector, 20))
+	}
+	fmt.Println("Vision Tested")
+}
+
+
+func (g *Grid) testWalldetection() {
+	fmt.Println("Testing WallDetection")
+	center := vector{float64(90), float64(20)}
+	leftVisionEnd := vector{g.visionVectors[1].leftVector.x+center.x,
+		g.visionVectors[1].leftVector.y+center.y}
+	rightVisionEnd := vector{ g.visionVectors[1].rightVector.x+center.x,
+		g.visionVectors[1].rightVector.y+center.y}
+	fmt.Println(center)
+	fmt.Println(leftVisionEnd)
+	fmt.Println(rightVisionEnd)
+	wall := g.checkWallInSigth(2,center, leftVisionEnd, rightVisionEnd)
+	newWall := NewWall(int(math.Round(wall.(vector).x)),int(math.Round(wall.(vector).y)))
+	fmt.Println(wall)
+	fmt.Println(newWall.x, newWall.y)
+	fmt.Println("WallDetection Tested")
 }

@@ -15,6 +15,7 @@ func main() {
 	numberOfAgents := 6
 	visionLength := 20
 	// vision angle is both to the right and left so actually twice this amount
+	// vision in degrees and must be smaller than 90 (overall smaller than 180)
 	visionAngle := 40
 	grid2D := model.NewWorld(w, h, numberOfAgents, visionLength, visionAngle)
 	a.SetWorld(grid2D)
@@ -25,9 +26,9 @@ func main() {
 	}
 
 	addFood(5, 5, a, grid2D)
-	addFood(98, 98, a, grid2D)
-	addFood(0, 0, a, grid2D)
-	addFood(0, 98, a, grid2D)
+	//addFood(98, 98, a, grid2D)
+	//addFood(0, 0, a, grid2D)
+	//addFood(0, 98, a, grid2D)
 
 	a.LimitIterations(10000000)
 
