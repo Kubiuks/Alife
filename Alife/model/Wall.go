@@ -2,10 +2,10 @@ package model
 
 type Wall struct {
 	id 			 int
-	x, y         int
+	x, y         float64
 }
 
-func NewWall(x, y int) *Wall {
+func NewWall(x, y float64) *Wall {
 	return &Wall{
 		id:    -3,
 		x:     x,
@@ -16,5 +16,5 @@ func NewWall(x, y int) *Wall {
 
 func (w *Wall) Run() { return }
 func (w *Wall) ID() int { return w.id }
-func (w *Wall) X() int { return w.x }
-func (w *Wall) Y() int { return w.y }
+func (w *Wall) X() float64 { return w.x }
+func (w *Wall) Y() float64 { return w.y }

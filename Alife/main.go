@@ -21,7 +21,7 @@ func main() {
 	a.SetWorld(grid2D)
 	//start from 1 coz id 0 is empty cell
 	for i:=1; i<numberOfAgents+1; i++ {
-		x, y := rand.Intn(w-1), rand.Intn(h-1)
+		x, y := randomFloat(float64(w)), randomFloat(float64(h))
 		addAgent(x, y, i, a, grid2D, false)
 	}
 
@@ -36,7 +36,7 @@ func main() {
 	//chAlive := make(chan int)
 	a.SetReportFunc(func(a *model.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			//time.Sleep(10*time.Microsecond)
+			time.Sleep(1*time.Microsecond)
 			if a == nil {
 				return 0
 			}
@@ -54,7 +54,7 @@ func main() {
 	ui.Loop()
 }
 
-func addAgent(x, y, id int, a *model.ABM, grid2D *model.Grid, trail bool) {
+func addAgent(x, y float64, id int, a *model.ABM, grid2D *model.Grid, trail bool) {
 	cell, err := model.NewAgent(a, id, x, y, trail)
 	if err != nil {
 		log.Fatal(err)
@@ -63,11 +63,22 @@ func addAgent(x, y, id int, a *model.ABM, grid2D *model.Grid, trail bool) {
 	grid2D.SetCell(cell.X(), cell.Y(), cell)
 }
 
-func addFood(x, y int, a *model.ABM, grid2D *model.Grid) {
+func addFood(x, y float64, a *model.ABM, grid2D *model.Grid) {
 	cell, err := model.NewFood(a, x, y)
 	if err != nil {
 		log.Fatal(err)
 	}
 	a.AddAgent(cell)
 	grid2D.SetCell(cell.X(), cell.Y(), cell)
+}
+
+func randomFloat(max float64) float64 {
+	var res float64
+	for {
+		res = rand.Float64()
+		if res != 0 {
+			break
+		}
+	}
+	return res*max
 }

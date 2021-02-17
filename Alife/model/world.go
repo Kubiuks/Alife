@@ -58,14 +58,15 @@ func (g *Grid) Tick(agents []lib.Agent) {
 	for j := 0; j < l; j++ {
 		if agent, ok := agents[j].(*Agent); ok {
 			g.agentVision[agent.ID()-1] = nil
-			center := vector{float64(agent.x), float64(agent.y)}
+			center := vector{agent.x, agent.y}
+
 			leftVisionEnd := vector{g.visionVectors[agent.direction].leftVector.x+center.x,
 									g.visionVectors[agent.direction].leftVector.y+center.y}
 			rightVisionEnd := vector{ g.visionVectors[agent.direction].rightVector.x+center.x,
 									  g.visionVectors[agent.direction].rightVector.y+center.y}
 			for i:=0;i<4;i++{
 				if wall := g.checkWallInSigth(i, center, leftVisionEnd, rightVisionEnd); wall != nil{
-					newWall := NewWall(int(math.Round(wall.(vector).x)),int(math.Round(wall.(vector).y)))
+					newWall := NewWall(wall.(vector).x,wall.(vector).y)
 					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], newWall)
 				}
 			}
@@ -73,7 +74,7 @@ func (g *Grid) Tick(agents []lib.Agent) {
 				if agents[j] == agents[k] {
 					continue
 				}
-				point := vector{float64(agents[k].X()), float64(agents[k].Y())}
+				point := vector{agents[k].X(), agents[k].Y()}
 				if isInsideSector(center, point, g.visionVectors[agent.direction].leftVector,
 								  g.visionVectors[agent.direction].rightVector, g.visionLength){
 					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], agents[k])
@@ -83,7 +84,7 @@ func (g *Grid) Tick(agents []lib.Agent) {
 	}
 }
 
-func (g *Grid) Move(id, fromX, fromY, toX, toY int) error {
+func (g *Grid) Move(id int, fromX, fromY, toX, toY float64) error {
 	if err := g.validateXY(fromX, fromY); err != nil {
 		return err
 	}
@@ -92,88 +93,84 @@ func (g *Grid) Move(id, fromX, fromY, toX, toY int) error {
 	}
 	g.mx.Lock()
 	defer g.mx.Unlock()
-
-	agentFrom := g.cells[g.idx(fromX, fromY)]
-	agentTo := g.cells[g.idx(toX, toY)]
-	if agentFrom.ID() == id{
-		g.cells[g.idx(fromX, fromY)] = nil
-		if agentTo == nil {
-			g.cells[g.idx(toX, toY)] = agentFrom
-		} else if agentTo.ID() == -2 {
-			agentTo.(*HolderAgent).AddAgent(agentFrom)
-		} else {
-			holder := NewHolderAgent(g, toX, toY)
-			holder.AddAgent(agentTo)
-			holder.AddAgent(agentFrom)
-			g.cells[g.idx(toX, toY)] = holder
-		}
-	} else {
-		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
-		g.cells[g.idx(fromX, fromY)] = agentFromPost
-		if agentTo == nil {
-			g.cells[g.idx(toX, toY)] = agent
-		} else if agentTo.ID() == -2 {
-			agentTo.(*HolderAgent).AddAgent(agent)
-		} else {
-			holder := NewHolderAgent(g, toX, toY)
-			holder.AddAgent(agentTo)
-			holder.AddAgent(agent)
-			g.cells[g.idx(toX, toY)] = holder
-		}
-	}
-	return nil
-}
-
-func (g *Grid) Copy(id, fromX, fromY, toX, toY int) error {
-	if err := g.validateXY(fromX, fromY); err != nil {
-		return err
-	}
-	if err := g.validateXY(toX, toY); err != nil {
-		return err
-	}
-	g.mx.Lock()
-	defer g.mx.Unlock()
-
-	agentFrom := g.cells[g.idx(fromX, fromY)]
-	agentTo := g.cells[g.idx(toX, toY)]
-	if agentFrom.ID() == id{
-		if agentTo == nil {
-			g.cells[g.idx(toX, toY)] = agentFrom
-		} else if agentTo.ID() == -2 {
-			agentTo.(*HolderAgent).AddAgent(agentFrom)
-		} else {
-			holder := NewHolderAgent(g, toX, toY)
-			holder.AddAgent(agentTo)
-			holder.AddAgent(agentFrom)
-			g.cells[g.idx(toX, toY)] = holder
-		}
-	} else {
-		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
-		g.cells[g.idx(fromX, fromY)] = agentFromPost
-		if agentTo == nil {
-			g.cells[g.idx(toX, toY)] = agent
-		} else if agentTo.ID() == -2 {
-			agentTo.(*HolderAgent).AddAgent(agent)
-		} else {
-			holder := NewHolderAgent(g, toX, toY)
-			holder.AddAgent(agentTo)
-			holder.AddAgent(agent)
-			g.cells[g.idx(toX, toY)] = holder
-		}
-	}
-	return nil
-}
-
-func (g *Grid) Cell(x, y int) lib.Agent {
-	if g.validateXY(x, y) != nil {
+	indexFrom := g.idx(fromX, fromY)
+	indexTo := g.idx(toX, toY)
+	if indexFrom == indexTo {
 		return nil
 	}
-	g.mx.RLock()
-	defer g.mx.RUnlock()
-	return g.cells[g.idx(x, y)]
+	agentFrom := g.cells[indexFrom]
+	agentTo := g.cells[indexTo]
+	if agentFrom.ID() == id{
+		g.cells[indexFrom] = nil
+		if agentTo == nil {
+			g.cells[indexTo] = agentFrom
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agentFrom)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agentFrom)
+			g.cells[indexTo] = holder
+		}
+	} else {
+		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
+		g.cells[indexFrom] = agentFromPost
+		if agentTo == nil {
+			g.cells[indexTo] = agent
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agent)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agent)
+			g.cells[indexTo] = holder
+		}
+	}
+	return nil
 }
 
-func (g *Grid) SetCell(x, y int, c lib.Agent) {
+func (g *Grid) Copy(id int, fromX, fromY, toX, toY float64) error {
+	if err := g.validateXY(fromX, fromY); err != nil {
+		return err
+	}
+	if err := g.validateXY(toX, toY); err != nil {
+		return err
+	}
+	g.mx.Lock()
+	defer g.mx.Unlock()
+	indexFrom := g.idx(fromX, fromY)
+	indexTo := g.idx(toX, toY)
+	agentFrom := g.cells[indexFrom]
+	agentTo := g.cells[indexTo]
+	if agentFrom.ID() == id{
+		if agentTo == nil {
+			g.cells[indexTo] = agentFrom
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agentFrom)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agentFrom)
+			g.cells[indexTo] = holder
+		}
+	} else {
+		agentFromPost, agent := agentFrom.(*HolderAgent).DeleteAgent(id)
+		g.cells[indexFrom] = agentFromPost
+		if agentTo == nil {
+			g.cells[indexTo] = agent
+		} else if agentTo.ID() == -2 {
+			agentTo.(*HolderAgent).AddAgent(agent)
+		} else {
+			holder := NewHolderAgent(g, toX, toY)
+			holder.AddAgent(agentTo)
+			holder.AddAgent(agent)
+			g.cells[indexTo] = holder
+		}
+	}
+	return nil
+}
+
+func (g *Grid) SetCell(x, y float64, c lib.Agent) {
 	if err := g.validateXY(x, y); err != nil {
 		panic(err)
 	}
@@ -192,6 +189,14 @@ func (g *Grid) SetCell(x, y int, c lib.Agent) {
 	g.mx.Unlock()
 }
 
+func (g *Grid) size() int {
+	return g.height * g.width
+}
+
+func (g *Grid) idx(x, y float64) int {
+	return int(math.Floor(y))*g.width + int(math.Floor(x))
+}
+
 func (g *Grid) Width() int {
 	return g.width
 }
@@ -200,17 +205,17 @@ func (g *Grid) Height() int {
 	return g.height
 }
 
-func (g *Grid) validateXY(x, y int) error {
-	if x < 0 {
+func (g *Grid) validateXY(x, y float64) error {
+	if x <= 0 {
 		return errors.New("x < 0")
 	}
-	if y < 0 {
+	if y <= 0 {
 		return errors.New("y < 0")
 	}
-	if x > g.width-1 {
+	if x >= float64(g.width) {
 		return errors.New("x > grid width")
 	}
-	if y > g.height-1 {
+	if y >= float64(g.height) {
 		return errors.New("y > grid height")
 	}
 	return nil
@@ -224,7 +229,7 @@ func (g *Grid) Dump(fn func(c lib.Agent) int) [][]interface{} {
 	for i := 0; i < g.width; i++ {
 		ret[i] = make([]interface{}, g.height)
 		for j := 0; j < g.height; j++ {
-			a := g.cells[g.idx(i, j)]
+			a := g.cells[g.idx(float64(i), float64(j))]
 			ret[i][j] = fn(a)
 		}
 	}
@@ -319,58 +324,24 @@ func pointOnWallWithlowestDistance(point, wallStart, wallEnd vector, visionLengt
 	|__3__|
  */
 func (g *Grid) initialiseWalls(width, height int) {
-	g.walls[0].leftVector = vector{-1,float64(height)}
-	g.walls[0].rightVector = vector{-1, -1}
-	g.walls[1].leftVector = vector{-1,-1}
-	g.walls[1].rightVector = vector{float64(width), -1}
-	g.walls[2].leftVector = vector{float64(width),-1}
+	g.walls[0].leftVector  = vector{0,float64(height)}
+	g.walls[0].rightVector = vector{0, 0}
+	g.walls[1].leftVector  = vector{0,0}
+	g.walls[1].rightVector = vector{float64(width), 0}
+	g.walls[2].leftVector  = vector{float64(width),0}
 	g.walls[2].rightVector = vector{float64(width), float64(height)}
-	g.walls[3].leftVector = vector{float64(width),float64(height)}
-	g.walls[3].rightVector = vector{-1, float64(height)}
+	g.walls[3].leftVector  = vector{float64(width),float64(height)}
+	g.walls[3].rightVector = vector{0, float64(height)}
 }
 
 func (g *Grid) initialiseVisionVectors(visionLength, visionAngle int) {
-	g.visionVectors = make([]directionVectors, 8)
-	g.visionVectors[0].leftVector  = vector{float64(visionLength)*math.Sin((0+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-								 	 	    float64(visionLength)*math.Cos((0+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[0].rightVector = vector{float64(visionLength)*math.Sin((0-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((0-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[1].leftVector  = vector{float64(visionLength)*math.Sin((45+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((45+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[1].rightVector = vector{float64(visionLength)*math.Sin((45-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((45-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[2].leftVector  = vector{float64(visionLength)*math.Sin((90+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((90+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[2].rightVector = vector{float64(visionLength)*math.Sin((90-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((90-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[3].leftVector  = vector{float64(visionLength)*math.Sin((135+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((135+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[3].rightVector = vector{float64(visionLength)*math.Sin((135-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((135-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[4].leftVector  = vector{float64(visionLength)*math.Sin((180+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((180+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[4].rightVector = vector{float64(visionLength)*math.Sin((180-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((180-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[5].leftVector  = vector{float64(visionLength)*math.Sin((225+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((225+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[5].rightVector = vector{float64(visionLength)*math.Sin((225-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((225-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[6].leftVector  = vector{float64(visionLength)*math.Sin((270+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((270+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[6].rightVector = vector{float64(visionLength)*math.Sin((270-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((270-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[7].leftVector  = vector{float64(visionLength)*math.Sin((315+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-										    float64(visionLength)*math.Cos((315+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-	g.visionVectors[7].rightVector = vector{float64(visionLength)*math.Sin((315-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
-											float64(visionLength)*math.Cos((315-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
-}
-
-func (g *Grid) size() int {
-	return g.height * g.width
-}
-
-func (g *Grid) idx(x, y int) int {
-	return y*g.width + x
+	g.visionVectors = make([]directionVectors, 360)
+	for i:=0;i<360;i++ {
+		g.visionVectors[i].leftVector  = vector{float64(visionLength) * math.Sin((float64(i)+(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+												float64(visionLength) * math.Cos((float64(i)+(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+		g.visionVectors[i].rightVector = vector{float64(visionLength) * math.Sin((float64(i)-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
+												float64(visionLength) * math.Cos((float64(i)-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -398,7 +369,7 @@ func (g *Grid) testWalldetection() {
 	fmt.Println(leftVisionEnd)
 	fmt.Println(rightVisionEnd)
 	wall := g.checkWallInSigth(2,center, leftVisionEnd, rightVisionEnd)
-	newWall := NewWall(int(math.Round(wall.(vector).x)),int(math.Round(wall.(vector).y)))
+	newWall := NewWall(wall.(vector).x,wall.(vector).y)
 	fmt.Println(wall)
 	fmt.Println(newWall.x, newWall.y)
 	fmt.Println("WallDetection Tested")

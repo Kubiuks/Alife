@@ -8,13 +8,12 @@ import (
 type HolderAgent struct {
 	mx     sync.RWMutex
 	id int
-	x int
-	y int
+	x,y float64
 	grid *Grid
 	agents []lib.Agent
 }
 
-func NewHolderAgent(grid *Grid, x, y int) *HolderAgent {
+func NewHolderAgent(grid *Grid, x, y float64) *HolderAgent {
 	return &HolderAgent{
 		id:    -2,
 		x:     x,
@@ -48,8 +47,8 @@ func (h *HolderAgent) DeleteAgent(id int) (lib.Agent, lib.Agent){
 }
 
 func (h *HolderAgent) ID() int { return h.id }
-func (h *HolderAgent) X() int { return h.x }
-func (h *HolderAgent) Y() int { return h.y }
+func (h *HolderAgent) X() float64 { return h.x }
+func (h *HolderAgent) Y() float64 { return h.y }
 
 func (h *HolderAgent) Agents() []lib.Agent {
 	h.mx.RLock()

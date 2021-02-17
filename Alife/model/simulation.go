@@ -2,7 +2,6 @@ package model
 
 import (
 	"Alife/lib"
-	"fmt"
 	"sync"
 )
 
@@ -73,13 +72,7 @@ func (a *ABM) Iteration() int {
 
 func (a *ABM) StartSimulation() {
 	for i := 0; i < a.Limit(); i++ {
-		for j := 0; j < a.AgentsCount(); j++ {
-			if a.agents[j].ID() == -1 {
-				fmt.Println("MAIN LOOP")
-				fmt.Println(a.agents[j].(*Food).Resource())
-				//time.Sleep(20*time.Second)
-			}
-		}
+
 		a.i = i
 		if a.World() != nil {
 			a.World().Tick(a.agents)

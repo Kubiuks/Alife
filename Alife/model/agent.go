@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -10,16 +11,17 @@ import (
 // walks randomly over 2D grid.
 type Agent struct {
 	alive		 bool
-	energy		 float32
+	energy		 float64
 	id 			 int
-	x, y         int
-	origx, origy int
+	x, y         float64
+	origx, origy float64
+	stepSize      float64
 	grid         *Grid
 	trail        bool
 	direction    int
 }
 
-func NewAgent(abm *ABM, id, x, y int, trail bool) (*Agent, error) {
+func NewAgent(abm *ABM, id int, x, y float64, trail bool) (*Agent, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("Agent needs a World defined to operate")
@@ -38,18 +40,21 @@ func NewAgent(abm *ABM, id, x, y int, trail bool) (*Agent, error) {
 		y:      y,
 		grid:   grid,
 		trail:  trail,
-		direction: rand.Intn(8),
+		stepSize: 1,
+		direction: rand.Intn(360),
 	}, nil
 }
 
 func (a *Agent) Run() {
+	//fmt.Println(a.x, a.y)
+	//fmt.Printf("I am agent: %v, and I see: %v\n", a.id, a.grid.agentVision[a.id-1])
 	for _,agent := range a.grid.agentVision[a.id-1] {
 		if agent.ID() == -1 {
 			fmt.Printf("I see food at (%v,%v)\n", agent.X(), agent.Y())
 		} else if agent.ID() == -3 {
-			//fmt.Printf("I see the Wall at (%v,%v)\n", agent.X(), agent.Y())
+			fmt.Printf("I see the Wall at (%v,%v)\n", agent.X(), agent.Y())
 		} else {
-			//fmt.Printf("I see an agent at (%v,%v)\n", agent.X(), agent.Y())
+			fmt.Printf("I see an agent at (%v,%v)\n", agent.X(), agent.Y())
 		}
 	}
 	//if !a.alive{
@@ -60,44 +65,11 @@ func (a *Agent) Run() {
 }
 
 func (a *Agent) move(){
-	rx := rand.Intn(8)
 	oldx, oldy := a.x, a.y
 	oldDirection := a.direction
-	switch rx {
-	/*
-		|5|4|3|
-		|6|x|2|
-		|7|0|1|
-	*/
-	case 0:
-		a.x++
-		a.direction = 2
-	case 1:
-		a.y++
-		a.direction = 0
-	case 2:
-		a.x--
-		a.direction = 6
-	case 3:
-		a.y--
-		a.direction = 4
-	case 4:
-		a.y--
-		a.x++
-		a.direction = 3
-	case 5:
-		a.y--
-		a.x--
-		a.direction = 5
-	case 6:
-		a.y++
-		a.x--
-		a.direction = 7
-	case 7:
-		a.y++
-		a.x++
-		a.direction = 1
-	}
+	a.direction = mod(oldDirection + rand.Intn(41) - 20, 360)
+	a.x = oldx + a.stepSize * math.Sin(float64(a.direction)*(math.Pi/180.0))
+	a.y = oldy + a.stepSize * math.Cos(float64(a.direction)*(math.Pi/180.0))
 
 	var err error
 	if a.trail {
@@ -116,8 +88,17 @@ func (a *Agent) move(){
 		}
 	}
 }
+
+func mod(a, b int) int {
+	c := a % b
+	if c < 0 {
+		return c+b
+	}
+	return c
+}
+
 func (a *Agent) ID() int { return a.id }
 func (a *Agent) Direction() int { return a.direction }
 func (a *Agent) Alive() bool { return a.alive }
-func (a *Agent) X() int      { return a.x }
-func (a *Agent) Y() int      { return a.y }
+func (a *Agent) X() float64      { return a.x }
+func (a *Agent) Y() float64      { return a.y }

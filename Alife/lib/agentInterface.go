@@ -6,8 +6,8 @@ import (
 
 type Agent interface {
 	ID() int
-	X()  int
-	Y()	 int
+	X()  float64
+	Y()	 float64
 	Run()
 }
 

@@ -7,13 +7,13 @@ import (
 
 type Food struct {
 	mutex 		 sync.RWMutex
-	resource	 float32
+	resource	 float64
 	id 			 int
-	x, y         int
+	x, y         float64
 	grid         *Grid
 }
 
-func NewFood(abm *ABM, x, y int) (*Food, error) {
+func NewFood(abm *ABM, x, y float64) (*Food, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("agent needs a World defined to operate")
@@ -39,12 +39,12 @@ func (f *Food) Run() {
 	f.mutex.Unlock()
 }
 
-func (f *Food) Resource() float32{
+func (f *Food) Resource() float64{
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	return f.resource
 }
 func (f *Food) ID() int { return f.id }
-func (f *Food) X() int { return f.x }
-func (f *Food) Y() int { return f.y }
+func (f *Food) X() float64 { return f.x }
+func (f *Food) Y() float64 { return f.y }
 
