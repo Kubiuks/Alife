@@ -1,18 +1,17 @@
-package model
+package lib
 
 import (
-	"Alife/lib"
 	"sync"
 )
 
 type ABM struct {
 	mx     sync.RWMutex
-	agents []lib.Agent
+	agents []Agent
 
 	i     int // current iteration
 	limit int
 
-	world      lib.World
+	world      World
 	reportFunc func(*ABM)
 }
 
@@ -24,13 +23,13 @@ func NewSimulation() *ABM {
 	}
 }
 
-func (a *ABM) SetWorld(w lib.World) {
+func (a *ABM) SetWorld(w World) {
 	if a.world == nil {
 		a.world = w
 	}
 }
 
-func (a *ABM) World() lib.World {
+func (a *ABM) World() World {
 	return a.world
 }
 
@@ -38,13 +37,13 @@ func (a *ABM) SetReportFunc(fn func(*ABM)) {
 	a.reportFunc = fn
 }
 
-func (a *ABM) AddAgent(agent lib.Agent) {
+func (a *ABM) AddAgent(agent Agent) {
 	a.mx.Lock()
 	a.agents = append(a.agents, agent)
 	a.mx.Unlock()
 }
 
-func (a *ABM) AddAgents(spawnFunc func(*ABM) lib.Agent, n int) {
+func (a *ABM) AddAgents(spawnFunc func(*ABM) Agent, n int) {
 	for i := 0; i < n; i++ {
 		agent := spawnFunc(a)
 		a.AddAgent(agent)
@@ -100,13 +99,13 @@ func (a *ABM) AgentsCount() int {
 	return len(a.agents)
 }
 
-func (a *ABM) Agents() []lib.Agent {
+func (a *ABM) Agents() []Agent {
 	a.mx.RLock()
 	defer a.mx.RUnlock()
 	return a.agents
 }
 
-func (a *ABM) Count(condition func(agent lib.Agent) bool) int {
+func (a *ABM) Count(condition func(agent Agent) bool) int {
 	var count int
 	for _, agent := range a.Agents() {
 		if condition(agent) {

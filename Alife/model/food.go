@@ -1,6 +1,7 @@
 package model
 
 import (
+	"Alife/lib"
 	"errors"
 	"sync"
 )
@@ -13,7 +14,7 @@ type Food struct {
 	grid         *Grid
 }
 
-func NewFood(abm *ABM, x, y float64) (*Food, error) {
+func NewFood(abm *lib.ABM, x, y float64) (*Food, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("agent needs a World defined to operate")
