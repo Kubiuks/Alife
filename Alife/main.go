@@ -31,17 +31,17 @@ func main() {
 		addAgent(x, y, i, a, grid2D, chVar, false)
 	}
 
-	addFood(5, 5, a, grid2D)
+	//addFood(10, 10, a, grid2D)
 	addFood(55, 55, a, grid2D)
 	//addFood(98, 98, a, grid2D)
 	//addFood(0, 0, a, grid2D)
 	//addFood(0, 98, a, grid2D)
 
-	a.LimitIterations(10000000)
+	a.LimitIterations(100)
 
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			//time.Sleep(100*time.Nanosecond)
+			time.Sleep(100*time.Nanosecond)
 			if a == nil {
 				return 0
 			}

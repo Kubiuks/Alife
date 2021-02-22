@@ -4,6 +4,7 @@ import (
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/key"
+	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 	"image"
@@ -66,6 +67,10 @@ func (ui *UI) Loop() {
 		}
 		for {
 			switch e := w.NextEvent().(type) {
+			case lifecycle.Event:
+				if e.To == lifecycle.StageDead{
+					return
+				}
 			case key.Event:
 				if e.Code == key.CodeEscape || e.Code == key.CodeQ {
 					return

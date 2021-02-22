@@ -76,6 +76,8 @@ func (a *Agent) Run() {
 			// the agent sees a wall
 			a.turnFromWall()
 			return
+		} else if agent.ID() == -4{
+			// the agent sees empty food
 		} else {
 			// the agent sees another agent
 		}

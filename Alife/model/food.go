@@ -50,7 +50,6 @@ func (f *Food) reduceResource(amount float64){
 	f.resource -= amount
 	if f.resource <=0 {
 		f.alive = false
-		f.grid.ClearCell(f.x, f.y, f.id)
 		f.id = -4
 	}
 	f.mutex.Unlock()
