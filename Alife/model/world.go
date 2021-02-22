@@ -186,6 +186,20 @@ func (g *Grid) SetCell(x, y float64, c lib.Agent) {
 	g.mx.Unlock()
 }
 
+func (g *Grid) ClearCell(x, y float64, id int) {
+	if err := g.validateXY(x, y); err != nil {
+		panic(err)
+	}
+	g.mx.Lock()
+	temp := g.cells[g.idx(x, y)]
+	if temp.ID() == id {
+		g.cells[g.idx(x, y)] = nil
+	} else {
+		temp.(*HolderAgent).DeleteAgent(id)
+	}
+	g.mx.Unlock()
+}
+
 func (g *Grid) size() int {
 	return g.height * g.width
 }

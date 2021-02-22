@@ -7,7 +7,8 @@ import (
 )
 
 type Food struct {
-	mutex 		 sync.RWMutex
+	alive		 bool
+	mutex 		 sync.Mutex
 	resource	 float64
 	id 			 int
 	x, y         float64
@@ -24,6 +25,7 @@ func NewFood(abm *lib.ABM, x, y float64) (*Food, error) {
 		return nil, errors.New("agent needs a Grid world to operate")
 	}
 	return &Food{
+		alive: true,
 		resource: 1,
 		id:    -1,
 		x:     x,
@@ -34,8 +36,22 @@ func NewFood(abm *lib.ABM, x, y float64) (*Food, error) {
 
 func (f *Food) Run() {
 	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	if !f.alive{
+		return
+	}
 	if f.resource < 1 {
-		f.resource += 0.01
+		f.resource += 0.001
+	}
+}
+
+func (f *Food) reduceResource(amount float64){
+	f.mutex.Lock()
+	f.resource -= amount
+	if f.resource <=0 {
+		f.alive = false
+		f.grid.ClearCell(f.x, f.y, f.id)
+		f.id = -4
 	}
 	f.mutex.Unlock()
 }

@@ -32,6 +32,7 @@ func main() {
 	}
 
 	addFood(5, 5, a, grid2D)
+	addFood(55, 55, a, grid2D)
 	//addFood(98, 98, a, grid2D)
 	//addFood(0, 0, a, grid2D)
 	//addFood(0, 98, a, grid2D)
@@ -40,18 +41,12 @@ func main() {
 
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			time.Sleep(100*time.Nanosecond)
+			//time.Sleep(100*time.Nanosecond)
 			if a == nil {
 				return 0
 			}
 			return a.ID()})
 	})
-
-	go func() {
-		a.StartSimulation()
-		chVar <- "end"
-		close(chGrid)
-	}()
 
 	// get current time for datafile name
 	//t := time.Now()
@@ -63,6 +58,12 @@ func main() {
 	//writer := lib.NewWriter(finished, chVar, t.Format(time.Stamp)+".csv", numberOfAgents)
 	writer := lib.NewWriter(finished, chVar, "test.csv", numberOfAgents)
 	go writer.Loop()
+
+	go func() {
+		a.StartSimulation()
+		chVar <- "end"
+		close(chGrid)
+	}()
 
 	ui := lib.NewUI(w, h)
 	defer ui.Stop()
