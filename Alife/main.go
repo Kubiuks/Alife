@@ -54,13 +54,14 @@ func main() {
 	}()
 
 	// get current time for datafile name
-	t := time.Now()
+	//t := time.Now()
 
 	//chan to make sure we finish writing before finishing
 	finished := make(chan bool)
 
 	// start writer go routine
-	writer := lib.NewWriter(finished, chVar, t.Format(time.Stamp)+".txt", numberOfAgents)
+	//writer := lib.NewWriter(finished, chVar, t.Format(time.Stamp)+".csv", numberOfAgents)
+	writer := lib.NewWriter(finished, chVar, "test.csv", numberOfAgents)
 	go writer.Loop()
 
 	ui := lib.NewUI(w, h)

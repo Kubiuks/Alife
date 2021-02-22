@@ -2,6 +2,8 @@ package lib
 
 import (
 	"os"
+	"sort"
+	"strconv"
 )
 
 type Writer struct {
@@ -29,8 +31,19 @@ func check(e error) {
 }
 
 func (w *Writer) Loop(){
+	header := ""
+	for i:=0;i<w.numOfAgents; i++ {
+		header = header+"Agent_"+strconv.Itoa(i+1)
+		if i != w.numOfAgents-1 {
+			header = header + ","
+		}
+	}
+	header = header + "\n"
+	_, err1 := w.f.WriteString(header)
+	check(err1)
 	loop:
 	for {
+		data := make([]string, w.numOfAgents)
 		for i:=0;i<w.numOfAgents; i++ {
 			s := <-w.ch
 			switch s {
@@ -39,15 +52,20 @@ func (w *Writer) Loop(){
 				check(err)
 				break loop
 			default:
-				if i != w.numOfAgents-1 {
-					s = s + ","
-				}
-				_, err := w.f.WriteString(s)
-				check(err)
+				data[i] = s
 			}
 		}
-		_, err := w.f.WriteString("\n")
-		check(err)
+		sort.Strings(data)
+		res := ""
+		for i:=0;i<w.numOfAgents; i++ {
+			res = res + data[i]
+			if i != w.numOfAgents-1 {
+				res = res + ","
+			}
+		}
+		res = res + "\n"
+		_, err2 := w.f.WriteString(res)
+		check(err2)
 	}
 	w.finished <- true
 }

@@ -54,7 +54,7 @@ func NewAgent(abm *lib.ABM, id int, x, y float64, ch chan string, trail bool) (*
 
 func (a *Agent) Run() {
 	if a.ch != nil {
-		a.ch <- fmt.Sprintf("(%v, %v, %v)", a.id, a.oxytocin, a.cortisol)
+		a.ch <- fmt.Sprintf("'[%v, %v, %v, %v]'", a.id, a.energy, a.oxytocin, a.cortisol)
 	}
 	for _,agent := range a.grid.agentVision[a.id-1] {
 		if agent.ID() == -1 {
@@ -72,6 +72,10 @@ func (a *Agent) Run() {
 	//	return
 	//}
 	a.move()
+}
+
+func (a *Agent) motivation(){
+
 }
 
 func (a *Agent) moveFromWall(){
@@ -92,7 +96,7 @@ func (a *Agent) moveFromWall(){
 		a.x, a.y = oldx, oldy
 		a.direction = oldDirection
 	} else {
-		//a.energy -= 0.001
+		//a.energy -= 0.5
 		if a.energy <= 0 {
 			a.alive = false
 		}
@@ -117,7 +121,7 @@ func (a *Agent) move(){
 		a.x, a.y = oldx, oldy
 		a.direction = oldDirection
 	} else {
-		//a.energy -= 0.001
+		a.energy -= rand.Float64()
 		if a.energy <= 0 {
 			a.alive = false
 		}
