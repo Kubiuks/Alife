@@ -40,7 +40,7 @@ func main() {
 
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			time.Sleep(1*time.Microsecond)
+			time.Sleep(100*time.Nanosecond)
 			if a == nil {
 				return 0
 			}
