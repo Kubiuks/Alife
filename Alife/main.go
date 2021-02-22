@@ -40,7 +40,7 @@ func main() {
 
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			//time.Sleep(1*time.Microsecond)
+			time.Sleep(1*time.Microsecond)
 			if a == nil {
 				return 0
 			}
@@ -56,7 +56,7 @@ func main() {
 	// get current time for datafile name
 	t := time.Now()
 
-	//chann to make sure we finish writing before finishing
+	//chan to make sure we finish writing before finishing
 	finished := make(chan bool)
 
 	// start writer go routine

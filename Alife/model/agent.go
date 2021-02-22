@@ -77,7 +77,7 @@ func (a *Agent) Run() {
 func (a *Agent) moveFromWall(){
 	oldx, oldy := a.x, a.y
 	oldDirection := a.direction
-	a.direction = mod(oldDirection + rand.Intn(271) - 135, 360)
+	a.direction = mod(oldDirection + rand.Intn(136) - rand.Intn(136), 360)
 	a.x = oldx + a.stepSize * math.Sin(float64(a.direction)*(math.Pi/180.0))
 	a.y = oldy + a.stepSize * math.Cos(float64(a.direction)*(math.Pi/180.0))
 
@@ -102,7 +102,7 @@ func (a *Agent) moveFromWall(){
 func (a *Agent) move(){
 	oldx, oldy := a.x, a.y
 	oldDirection := a.direction
-	a.direction = mod(oldDirection + rand.Intn(41) - 20, 360)
+	a.direction = mod(oldDirection + rand.Intn(21) - rand.Intn(21), 360)
 	a.x = oldx + a.stepSize * math.Sin(float64(a.direction)*(math.Pi/180.0))
 	a.y = oldy + a.stepSize * math.Cos(float64(a.direction)*(math.Pi/180.0))
 
