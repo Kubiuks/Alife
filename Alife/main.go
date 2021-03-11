@@ -3,6 +3,7 @@ package main
 import (
 	"Alife/lib"
 	"Alife/model"
+	"errors"
 	"log"
 	"math/rand"
 	"time"
@@ -10,6 +11,8 @@ import (
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
+
+	// setup
 	a := lib.NewSimulation()
 	w, h := 99, 99
 	numberOfAgents := 6
@@ -25,23 +28,29 @@ func main() {
 	chGrid := make(chan [][]interface{})
 	chVar := make(chan string, numberOfAgents)
 
-	//start from 1 coz id 0 is empty cell
+	// initialise agents from 1 to 6
 	for i:=1; i<numberOfAgents+1; i++ {
 		x, y := randomFloat(float64(w)), randomFloat(float64(h))
-		addAgent(x, y, i, a, grid2D, chVar, false)
+		addAgent(x, y, i, i, a, grid2D, chVar, false, "Control")
 	}
 
-	//addFood(10, 10, a, grid2D)
-	addFood(55, 55, a, grid2D)
-	//addFood(98, 98, a, grid2D)
-	//addFood(0, 0, a, grid2D)
-	//addFood(0, 98, a, grid2D)
+	// set up bonds between agents
+	bondedAgents := []int{3,4,5}
+	err := initialiseBonds(bondedAgents, numberOfAgents, a)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	a.LimitIterations(100)
+	// pick world settings
+	setupWorld(a, grid2D, "Four")
 
+	a.LimitIterations(100000)
+
+	// reporting function, does something each iteration
+	// in this case updates the UI
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			time.Sleep(100*time.Nanosecond)
+			time.Sleep(300*time.Nanosecond)
 			if a == nil {
 				return 0
 			}
@@ -75,9 +84,14 @@ func main() {
 	close(chVar)
 	close(finished)
 }
+//______________________________________________________________________________________________________________________
+//______________________________________________________________________________________________________________________
+//______________________________________________________________________________________________________________________
+//______________________________________________________________________________________________________________________
+//______________________________________________________________________________________________________________________
 
-func addAgent(x, y float64, id int, a *lib.ABM, grid2D *model.Grid, ch chan string, trail bool) {
-	cell, err := model.NewAgent(a, id, x, y, ch, trail)
+func addAgent(x, y float64, id, rank int, a *lib.ABM, grid2D *model.Grid, ch chan string, trail bool, CortisolThresholdCondition string) {
+	cell, err := model.NewAgent(a, id, rank, x, y, ch, trail, CortisolThresholdCondition)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,6 +108,47 @@ func addFood(x, y float64, a *lib.ABM, grid2D *model.Grid) {
 	grid2D.SetCell(cell.X(), cell.Y(), cell)
 }
 
+func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
+	switch condition{
+	case "Four":
+		addFood(9, 9, a, grid2D)
+		addFood(89, 89, a, grid2D)
+		addFood(9, 89, a, grid2D)
+		addFood(89, 9, a, grid2D)
+	case "Seasonal":
+	case "Extreme":
+	}
+	grid2D.SetWorldDynamics(condition)
+}
+
+func initialiseBonds(bondedAgents []int, numberOfAgents int, a *lib.ABM) error {
+	for i:= 0; i < len(bondedAgents); i++ {
+		if bondedAgents[i] < 1 || bondedAgents[i] > numberOfAgents { return errors.New("invalid agent id") }
+		for j:=0; j < len(bondedAgents); j++ {
+			if i != j {
+				if bondedAgents[i] == bondedAgents[j]{
+					return errors.New("agent bond duplicate; agent cannot bond with itself")
+				}
+			}
+		}
+	}
+	for i:= 0; i < len(bondedAgents); i++ {
+		for _,agent := range a.Agents(){
+			if agent.ID() == bondedAgents[i] {
+				var bonds []int
+				for j:=0; j < len(bondedAgents); j++ {
+					if i != j {
+						bonds = append(bonds, bondedAgents[j])
+					}
+				}
+				agent.(*model.Agent).SetBonds(bonds)
+			}
+		}
+	}
+	return nil
+}
+
+// needed to make sure it's never 0
 func randomFloat(max float64) float64 {
 	var res float64
 	for {

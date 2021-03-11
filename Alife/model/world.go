@@ -15,6 +15,7 @@ type Grid struct {
 	cells []lib.Agent
 	agentVision [][]lib.Agent
 	walls []directionVectors
+	worldDynamics string
 }
 
 type directionVectors struct {
@@ -51,34 +52,56 @@ func NewWorld(width, height, numberOfAgents, visionLength, visionAngle int) *Gri
 func (g *Grid) Tick(agents []lib.Agent) {
 	g.mx.RLock()
 	defer g.mx.RUnlock()
-	l := len(agents)
-	for j := 0; j < l; j++ {
+	for j := 0; j < len(agents); j++ {
 		if agent, ok := agents[j].(*Agent); ok {
-			g.agentVision[agent.id-1] = nil
-			center := vector{agent.x, agent.y}
-			vision := g.findVsionVectors(agent.direction, g.visionLength, g.visionAngle)
-			leftVisionEnd := vector{vision.leftVector.x+center.x,
-									vision.leftVector.y+center.y}
-			rightVisionEnd := vector{ vision.rightVector.x+center.x,
-									  vision.rightVector.y+center.y}
-			for i:=0;i<4;i++{
-				if wall := g.checkWallInSigth(i, center, leftVisionEnd, rightVisionEnd); wall != nil{
-					newWall := NewWall(wall.(vector).x,wall.(vector).y)
-					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], newWall)
-				}
-			}
-			for k := 0; k < l; k++ {
-				if agents[j] == agents[k] {
-					continue
-				}
-				point := vector{agents[k].X(), agents[k].Y()}
-				if isInsideSector(center, point, vision.leftVector,
-								  vision.rightVector, g.visionLength){
-					g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], agents[k])
-				}
-			}
+			g.checkAgentVision(agents, agent)
+		} else if food, ok := agents[j].(*Food); ok {
+			g.checkOwnerOfFood(agents, food)
 		}
 	}
+}
+
+func (g *Grid) checkAgentVision(agents []lib.Agent, agent *Agent) {
+	g.agentVision[agent.id-1] = nil
+	center := vector{agent.x, agent.y}
+	vision := g.findVsionVectors(agent.direction, g.visionLength, g.visionAngle)
+	leftVisionEnd := vector{vision.leftVector.x+center.x,
+		vision.leftVector.y+center.y}
+	rightVisionEnd := vector{ vision.rightVector.x+center.x,
+		vision.rightVector.y+center.y}
+	for i:=0;i<4;i++{
+		if wall := g.checkWallInSigth(i, center, leftVisionEnd, rightVisionEnd); wall != nil{
+			newWall := NewWall(wall.(vector).x,wall.(vector).y)
+			g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], newWall)
+		}
+	}
+	for k := 0; k < len(agents); k++ {
+		if agent.ID() == agents[k].ID() {
+			continue
+		}
+		point := vector{agents[k].X(), agents[k].Y()}
+		if isInsideSector(center, point, vision.leftVector,
+			vision.rightVector, g.visionLength){
+			g.agentVision[agent.ID()-1] = append(g.agentVision[agent.ID()-1], agents[k])
+		}
+	}
+}
+
+func (g *Grid) checkOwnerOfFood(agents []lib.Agent, food *Food) {
+	var highestRankAgent *Agent
+	highestRank := 0
+	for k := 0; k < len(agents); k++ {
+		if agents[k].ID() < 1 {
+			continue
+		}
+		center := vector{food.X(), food.Y()}
+		point := vector{agents[k].X(), agents[k].Y()}
+		relVector := vector{point.x - center.x, point.y - center.y}
+		if isWithinRadius(relVector, 4) && agents[k].(*Agent).Rank() > highestRank {
+			highestRankAgent = agents[k].(*Agent)
+		}
+	}
+	food.SetOwner(highestRankAgent)
 }
 
 func (g *Grid) Move(id int, fromX, fromY, toX, toY float64) error {
@@ -350,4 +373,8 @@ func (g *Grid) findVsionVectors(direction float64, visionLength, visionAngle int
 											    float64(visionLength) * math.Cos((direction+(float64(visionAngle)+0.00001))*(math.Pi/180.0))},
 							rightVector: vector{float64(visionLength) * math.Sin((direction-(float64(visionAngle)+0.00001))*(math.Pi/180.0)),
 												float64(visionLength) * math.Cos((direction-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}}
+}
+
+func (g *Grid) SetWorldDynamics(condition string){
+	g.worldDynamics = condition
 }

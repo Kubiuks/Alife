@@ -7,9 +7,13 @@ import (
 )
 
 type Food struct {
+	// model
 	alive		 bool
-	mutex 		 sync.Mutex
 	resource	 float64
+	maxResource  float64
+	owner		 *Agent
+	// immplementation
+	mutex 		 sync.Mutex
 	id 			 int
 	x, y         float64
 	grid         *Grid
@@ -26,7 +30,9 @@ func NewFood(abm *lib.ABM, x, y float64) (*Food, error) {
 	}
 	return &Food{
 		alive: true,
-		resource: 1,
+		resource: 4,
+		maxResource: 4,
+		owner: nil,
 		id:    -1,
 		x:     x,
 		y:     y,
@@ -37,11 +43,11 @@ func NewFood(abm *lib.ABM, x, y float64) (*Food, error) {
 func (f *Food) Run() {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
-	if !f.alive{
+	if !f.alive {
 		return
 	}
-	if f.resource < 1 {
-		f.resource += 0.001
+	if f.resource < f.maxResource {
+		f.resource += 0.004
 	}
 }
 
@@ -60,6 +66,12 @@ func (f *Food) Resource() float64{
 	defer f.mutex.Unlock()
 	return f.resource
 }
+func (f *Food) SetOwner(agent *Agent) {
+	f.mutex.Lock()
+	f.owner = agent
+	f.mutex.Unlock()
+}
+func (f *Food) Owner() *Agent { return f.owner }
 func (f *Food) ID() int { return f.id }
 func (f *Food) X() float64 { return f.x }
 func (f *Food) Y() float64 { return f.y }

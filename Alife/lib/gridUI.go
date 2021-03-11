@@ -71,12 +71,12 @@ func (g *GridWidget) DrawCell(m *image.RGBA, x, y int, agent int) {
 	offX, offY := 10, 10
 	X := offX + x*g.SquareSize
 	Y := offY + y*g.SquareSize
-	colors := []*image.Uniform{image.NewUniform(color.RGBA{255, 0, 0, 0}),
-							   image.NewUniform(color.RGBA{0, 250, 0, 0}),
-							   image.NewUniform(color.RGBA{0, 0, 255, 0}),
-							   image.NewUniform(color.RGBA{255, 0, 255, 0}),
-							   image.NewUniform(color.RGBA{0, 255, 255, 0}),
-							   image.NewUniform(color.RGBA{255, 140, 0, 0})}
+	colors := []*image.Uniform{image.NewUniform(color.RGBA{255, 105, 180, 0}),		//agent 1
+							   image.NewUniform(color.RGBA{191, 65, 236, 0}),		//agent 2
+							   image.NewUniform(color.RGBA{145, 61, 136, 0}),		//agent 3
+							   image.NewUniform(color.RGBA{0, 255, 0, 0}),	//agent 4
+							   image.NewUniform(color.RGBA{0, 160, 0, 0}),	//agent 5
+							   image.NewUniform(color.RGBA{0, 100, 0, 0})}	//agent 6
 	col := image.Black
 	// agents start from 1
 	if agent != 0{
