@@ -71,6 +71,8 @@ func (f *Food) SetOwner(agent *Agent) {
 	f.owner = agent
 	f.mutex.Unlock()
 }
+
+func (f *Food) Alive() bool { return f.alive }
 func (f *Food) Owner() *Agent { return f.owner }
 func (f *Food) ID() int { return f.id }
 func (f *Food) X() float64 { return f.x }

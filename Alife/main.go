@@ -31,7 +31,7 @@ func main() {
 	// initialise agents from 1 to 6
 	for i:=1; i<numberOfAgents+1; i++ {
 		x, y := randomFloat(float64(w)), randomFloat(float64(h))
-		addAgent(x, y, i, i, a, grid2D, chVar, false, "Control")
+		addAgent(x, y, i, i, a, grid2D, chVar, false, "Neutral", "Fixed")
 	}
 
 	// set up bonds between agents
@@ -50,7 +50,7 @@ func main() {
 	// in this case updates the UI
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			time.Sleep(300*time.Nanosecond)
+			time.Sleep(100*time.Nanosecond)
 			if a == nil {
 				return 0
 			}
@@ -90,8 +90,9 @@ func main() {
 //______________________________________________________________________________________________________________________
 //______________________________________________________________________________________________________________________
 
-func addAgent(x, y float64, id, rank int, a *lib.ABM, grid2D *model.Grid, ch chan string, trail bool, CortisolThresholdCondition string) {
-	cell, err := model.NewAgent(a, id, rank, x, y, ch, trail, CortisolThresholdCondition)
+func addAgent(x, y float64, id, rank int, a *lib.ABM, grid2D *model.Grid, ch chan string,
+				trail bool, CortisolThresholdCondition, DSImode string) {
+	cell, err := model.NewAgent(a, id, rank, x, y, ch, trail, CortisolThresholdCondition, DSImode)
 	if err != nil {
 		log.Fatal(err)
 	}

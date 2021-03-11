@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 )
 
 // Agent implements lib.Agent and
@@ -20,19 +21,24 @@ type Agent struct {
 	rank				int
 	rankBasedCortisol	float64
 	stressed			bool
-	aggresionReceived	int
-	aggresionGiven		int
 	nutritionChange		float64
 	socialChange		float64
 	oxytocinChange		float64
 	cortisolChange		float64
 	adaptiveThreshold	float64
 	bondPartners		[]int
-	dyadicStrength		[]float64
+	DSIstrengths		[]float64
 	foodTimeWaiting		int
+	motivation			float64
+	physEffTouch		float64
+	touchIntensity		float64
+	tactileIntensity	float64
+	DSImode				string
 
 	stepSize     		float64
+
 	// implementation needed
+	mutex 		 sync.Mutex
 	id 			 int
 	x, y         float64
 	origx, origy float64
@@ -42,7 +48,7 @@ type Agent struct {
 	ch 			 chan string
 }
 
-func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bool, CortisolThresholdCondition string) (*Agent, error) {
+func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bool, CortisolThresholdCondition, DSImode string) (*Agent, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("agent needs a World defined to operate")
@@ -66,16 +72,19 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 		cortisol 			: 0,
 		socialness			: 1,
 		stressed			: false,
-		nutritionChange		: 0.0003,
+		nutritionChange		: 0.0006,
 		socialChange		: 0.0003,
 		oxytocinChange		: 0.0005,
 		cortisolChange		: 0.0005,
-		aggresionReceived	: 0,
-		aggresionGiven		: 0,
 		rank				: rank,
 		//rankBasedCortisol	: rankBasedCortisol,
 		adaptiveThreshold	: adaptiveThreshold,
 		foodTimeWaiting		: 0,
+		motivation			: 0,
+		physEffTouch		: 0.1,
+		touchIntensity		: 0,
+		tactileIntensity	: 0,
+		DSImode				: DSImode,
 
 
 		stepSize 			: 1,
@@ -94,7 +103,7 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 
 func (a *Agent) Run() {
 	// send data
-	if a.ch != nil { a.ch <- fmt.Sprintf("'[%v, %v, %v, %v]'", a.id, a.energy, a.oxytocin, a.cortisol) }
+	if a.ch != nil { a.ch <- fmt.Sprintf("'[%v, %v, %v, %v, %v]'", a.id, a.energy, a.socialness, a.oxytocin, a.cortisol) }
 	// dont do anything if dead
 	if !a.alive{ return }
 
@@ -105,6 +114,7 @@ func (a *Agent) Run() {
 	// check if died in this iteration
 	if a.energy <= 0 {
 		a.alive = false
+		a.energy = 0
 		a.grid.ClearCell(a.x, a.y, a.id)
 	}
 }
@@ -122,10 +132,15 @@ func (a *Agent) actionSelection(){
 
 
 	if groomMotivation > eatMotivation {
+		a.motivation = groomMotivation
+		a.touchIntensity = a.motivation * a.physEffTouch
+		a.tactileIntensity = a.touchIntensity * a.cortisol
 		a.pickAgent(agents, walls)
 	} else {
-		a.findEatFood(foods, walls)
+		a.motivation = eatMotivation
+		a.findEatFood(agents, foods, walls)
 	}
+	a.updateCT(energyErr + socialErr, agents, foods)
 }
 
 func (a *Agent) agentVal(agent *Agent) float64{
@@ -136,7 +151,8 @@ func (a *Agent) agentVal(agent *Agent) float64{
 		if agent.ID() == id {
 			// there is a bond
 			bond = 1
-			DSI = a.dyadicStrength[i]
+			DSI = a.DSIstrengths[i]
+			break
 		}
 	}
 	return rankDiff + (bond*DSI*a.oxytocin)
@@ -153,11 +169,11 @@ func (a *Agent) pickAgent(agents, walls []lib.Agent) {
 	} else {
 		// see some agents, so need to pick groom partner
 		// which is the agent with highest agentVal
-		groomPartner := agents[0].(*Agent)
-		agentVal := a.agentVal(groomPartner)
-		for _, temp := range agents[1:] {
+		var groomPartner *Agent
+		agentVal := -1.0
+		for _, temp := range agents {
 			tmpAgentVal := a.agentVal(temp.(*Agent))
-			if tmpAgentVal > agentVal {
+			if tmpAgentVal >= agentVal {
 				agentVal = tmpAgentVal
 				groomPartner = temp.(*Agent)
 			}
@@ -186,8 +202,15 @@ func (a *Agent) groomOrAggresionOrAvoid(agentVal float64, agent *Agent) {
 
 func (a *Agent) groom(agent *Agent){
 	if distance(a.x, a.y, agent.X(), agent.Y()) < 2 {
-		// TODO perform groom
-		a.socialness = 1
+		a.IncreaseOT(a.touchIntensity)
+		agent.IncreaseOT(a.touchIntensity)
+		a.socialness = a.socialness + a.tactileIntensity * 0.25
+		agent.ModulateCT(-1*a.tactileIntensity*0.3)
+		if a.DSImode == "Variable" {
+			a.ModulateDSI(agent.ID(), a.tactileIntensity*0.3)
+			agent.ModulateDSI(a.id, a.tactileIntensity*0.3)
+		}
+		a.randomMove()
 	} else {
 		a.moveTo(agent)
 	}
@@ -195,8 +218,14 @@ func (a *Agent) groom(agent *Agent){
 
 func (a *Agent) aggresion(agent *Agent){
 	if distance(a.x, a.y, agent.X(), agent.Y()) < 2 {
-		// TODO perform aggresion
-		a.socialness = 1
+		a.socialness = a.socialness + a.tactileIntensity * 0.25
+		a.ModulateCT(-1*a.tactileIntensity*0.3)
+		agent.ModulateCT(a.tactileIntensity*0.3)
+		if a.DSImode == "Variable" {
+			a.ModulateDSI(agent.ID(), -1*a.tactileIntensity*0.3)
+			agent.ModulateDSI(a.id, -1*a.tactileIntensity*0.3)
+		}
+		a.randomMove()
 	} else {
 		a.moveTo(agent)
 	}
@@ -206,13 +235,25 @@ func (a *Agent) avoidAgent() {
 	a.move(mod(a.direction - (90*1.5*a.cortisol), 360))
 }
 
-func (a *Agent) findEatFood(foods, walls []lib.Agent){
+func (a *Agent) findEatFood(agents, foods, walls []lib.Agent){
 	if foods == nil {
-		// dont see food, so turn if see wall else random move
-		if walls != nil {
-			a.turnFromWall()
-		} else {
-			a.randomMove()
+		// dont see food
+		// if see agents with AgentVal < 0 turn away
+		flag := false
+		for _, temp := range agents {
+			if a.agentVal(temp.(*Agent)) < 0 {
+				a.direction = mod(a.direction - (90*a.cortisol), 360)
+				flag = true
+				break
+			}
+		}
+		// if dont see agents but see wall turn away else random move
+		if !flag {
+			if walls != nil {
+				a.turnFromWall()
+			} else {
+				a.randomMove()
+			}
 		}
 	} else {
 		// see food so approach or eat if close
@@ -229,8 +270,9 @@ func (a *Agent) findEatFood(foods, walls []lib.Agent){
 		if dist <= 1 {
 			// next to food, so can eat
 			a.eatFood(food.(*Food))
-			if a.energy >= 1{
+			if a.energy >= 1 {
 				a.move(mod(a.direction - 90, 360))
+				a.energy = 1
 			}
 		} else {
 			// see food, calculate if can approach
@@ -281,6 +323,7 @@ func (a *Agent) move(direction float64){
 	oldx, oldy := a.x, a.y
 	oldDirection := a.direction
 	a.direction = direction
+	a.stepSize = (1 + a.cortisol * 0.75)/2
 	a.x = oldx + a.stepSize * math.Sin(a.direction*(math.Pi/180.0))
 	a.y = oldy + a.stepSize * math.Cos(a.direction*(math.Pi/180.0))
 
@@ -298,10 +341,70 @@ func (a *Agent) move(direction float64){
 }
 
 func (a *Agent) updateInternals(){
-	a.energy -= a.nutritionChange
-	if a.oxytocin > 0 {
-		a.socialness -= a.socialChange
+	a.mutex.Lock()
+	// lose energy
+	a.energy -= a.nutritionChange * a.stepSize
+	// lose and correct socialness
+	if a.socialness > 1 {
+		a.socialness = 1
 	}
+	a.socialness -= a.socialChange
+	if a.socialness < 0 {
+		a.socialness = 0
+	}
+	// lose and correct oxytocin
+	if a.oxytocin > 1 {
+		a.oxytocin = 1
+	}
+	a.oxytocin -= a.oxytocinChange
+	if a.oxytocin < 0 {
+		a.oxytocin = 0
+	}
+	// correct DSIstrengts
+	for i:=0; i<len(a.DSIstrengths);i++ {
+		if a.DSIstrengths[i] > 2 {
+			a.DSIstrengths[i] = 2
+		} else if a.DSIstrengths[i] < 0 {
+			a.DSIstrengths[i] = 0
+		}
+	}
+	// correct cortisol
+	if a.cortisol < 0 {
+		a.cortisol = 0
+	}
+	if a.cortisol > 1 {
+		a.cortisol = 1
+	}
+	// checked if stressed
+	if a.cortisol > a.adaptiveThreshold {
+		a.stressed = true
+	} else {
+		a.stressed = false
+	}
+	a.mutex.Unlock()
+}
+
+func (a *Agent) updateCT(sumOfErrors float64, agents, foods []lib.Agent){
+	a.mutex.Lock()
+	availableAgents := 0.0
+	for _, tempAgent := range agents {
+		tmpAgentVal := a.agentVal(tempAgent.(*Agent))
+		availableAgents += 1 - tmpAgentVal
+	}
+	availableFoods := 0.0
+	for _, tempFood := range foods {
+		if tempFood.(*Food).Owner() == nil {
+			availableFoods += 1
+		} else if a.agentVal(tempFood.(*Food).Owner()) >= 0 {
+			availableFoods += 1
+		}
+	}
+	releaseRateCT := ((sumOfErrors - availableAgents - availableFoods)/2)*a.cortisolChange
+	if releaseRateCT < 0 {
+		releaseRateCT = releaseRateCT / 2
+	}
+	a.cortisol = a.cortisol + releaseRateCT
+	a.mutex.Unlock()
 }
 
 func (a *Agent) inVision() ([]lib.Agent,[]lib.Agent,[]lib.Agent){
@@ -386,9 +489,40 @@ func cortisolThreshold(rank int, CortisolThresholdCondition string) (float64, er
 func (a *Agent) SetBonds(bonds []int) {
 	a.bondPartners = bonds
 	for i:=0; i<len(bonds);i++ {
-		a.dyadicStrength = append(a.dyadicStrength, 2)
+		a.DSIstrengths = append(a.DSIstrengths, 2)
 	}
 }
+
+func (a *Agent)	ModulateDSI(id int, amount float64){
+	a.mutex.Lock()
+	for i, partnerID := range a.bondPartners{
+		if id == partnerID {
+			a.DSIstrengths[i] = a.DSIstrengths[i] + amount
+			if a.DSIstrengths[i] > 2 {
+				a.DSIstrengths[i] = 2
+			} else if a.DSIstrengths[i] < 0 {
+				a.DSIstrengths[i] = 0
+			}
+			break
+		}
+	}
+	a.mutex.Unlock()
+}
+
+func (a *Agent) ModulateCT(amount float64) {
+	a.mutex.Lock()
+	a.cortisol = a.cortisol + amount
+	a.mutex.Unlock()
+}
+func (a *Agent) IncreaseOT(intensity float64){
+	a.mutex.Lock()
+	a.oxytocin = a.oxytocin + intensity
+	if a.oxytocin > 1 {
+		a.oxytocin = 1
+	}
+	a.mutex.Unlock()
+}
+
 func (a *Agent) Rank() int { return a.rank }
 func (a *Agent) ID() int { return a.id }
 func (a *Agent) Direction() float64 { return a.direction }

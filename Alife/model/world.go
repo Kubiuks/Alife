@@ -76,7 +76,7 @@ func (g *Grid) checkAgentVision(agents []lib.Agent, agent *Agent) {
 		}
 	}
 	for k := 0; k < len(agents); k++ {
-		if agent.ID() == agents[k].ID() {
+		if agent.ID() == agents[k].ID() || !agents[k].Alive() {
 			continue
 		}
 		point := vector{agents[k].X(), agents[k].Y()}
@@ -218,7 +218,8 @@ func (g *Grid) ClearCell(x, y float64, id int) {
 	if temp.ID() == id {
 		g.cells[g.idx(x, y)] = nil
 	} else {
-		temp.(*HolderAgent).DeleteAgent(id)
+		restFromHolder, _ := temp.(*HolderAgent).DeleteAgent(id)
+		g.cells[g.idx(x, y)] = restFromHolder
 	}
 	g.mx.Unlock()
 }

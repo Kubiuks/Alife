@@ -5,9 +5,10 @@ import (
 )
 
 type Agent interface {
-	ID() int
-	X()  float64
-	Y()	 float64
+	ID() 	int
+	X()  	float64
+	Y()	 	float64
+	Alive() bool
 	Run()
 }
 

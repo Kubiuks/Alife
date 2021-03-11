@@ -13,7 +13,7 @@ func NewWall(x, y float64) *Wall {
 	}
 }
 
-
+func (w *Wall) Alive() bool { return false }
 func (w *Wall) Run() { return }
 func (w *Wall) ID() int { return w.id }
 func (w *Wall) X() float64 { return w.x }

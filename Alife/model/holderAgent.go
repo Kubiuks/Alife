@@ -46,6 +46,7 @@ func (h *HolderAgent) DeleteAgent(id int) (lib.Agent, lib.Agent){
 	return h, nil
 }
 
+func (h *HolderAgent) Alive() bool { return false }
 func (h *HolderAgent) ID() int { return h.id }
 func (h *HolderAgent) X() float64 { return h.x }
 func (h *HolderAgent) Y() float64 { return h.y }
