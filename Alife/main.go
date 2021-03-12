@@ -42,15 +42,15 @@ func main() {
 	}
 
 	// pick world settings
-	setupWorld(a, grid2D, "Four")
+	setupWorld(a, grid2D, "Seasonal")
 
-	a.LimitIterations(100000)
+	a.LimitIterations(15000)
 
 	// reporting function, does something each iteration
 	// in this case updates the UI
 	a.SetReportFunc(func(a *lib.ABM) {
 		chGrid <- grid2D.Dump(func(a lib.Agent) int {
-			time.Sleep(100*time.Nanosecond)
+			//time.Sleep(100*time.Nanosecond)
 			if a == nil {
 				return 0
 			}
@@ -117,9 +117,20 @@ func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
 		addFood(9, 89, a, grid2D)
 		addFood(89, 9, a, grid2D)
 	case "Seasonal":
+		addFood(9, 9, a, grid2D)
+		addFood(89, 89, a, grid2D)
+		addFood(9, 89, a, grid2D)
+		addFood(89, 9, a, grid2D)
 	case "Extreme":
+		addFood(9, 9, a, grid2D)
+		addFood(89, 89, a, grid2D)
+		addFood(9, 89, a, grid2D)
+		addFood(89, 9, a, grid2D)
 	}
-	grid2D.SetWorldDynamics(condition)
+	err := grid2D.SetWorldDynamics(condition)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initialiseBonds(bondedAgents []int, numberOfAgents int, a *lib.ABM) error {

@@ -8,14 +8,17 @@ import (
 )
 
 type Grid struct {
-	mx            sync.RWMutex
-	width, height int
-	visionLength int
-	visionAngle  int
-	cells []lib.Agent
-	agentVision [][]lib.Agent
-	walls []directionVectors
-	worldDynamics string
+	mx            	sync.RWMutex
+	width, height	int
+	visionLength 	int
+	visionAngle  	int
+	cells 			[]lib.Agent
+	agentVision 	[][]lib.Agent
+	walls 			[]directionVectors
+	worldDynamics 	string
+	iteration		int
+	season			int
+	extremeSeason	int
 }
 
 type directionVectors struct {
@@ -33,6 +36,9 @@ func NewWorld(width, height, numberOfAgents, visionLength, visionAngle int) *Gri
 		height: height,
 		visionLength: visionLength,
 		visionAngle: visionAngle,
+		iteration: 0,
+		season: 0,
+		extremeSeason: 0,
 	}
 	g.cells = make([]lib.Agent, g.size())
 	g.agentVision = make([][]lib.Agent, numberOfAgents)
@@ -50,6 +56,8 @@ func NewWorld(width, height, numberOfAgents, visionLength, visionAngle int) *Gri
 // Tick marks beginning of the new time period.
 // Implements World interface.
 func (g *Grid) Tick(agents []lib.Agent) {
+	g.updateWorld(agents)
+	g.iteration++
 	g.mx.RLock()
 	defer g.mx.RUnlock()
 	for j := 0; j < len(agents); j++ {
@@ -59,6 +67,97 @@ func (g *Grid) Tick(agents []lib.Agent) {
 			g.checkOwnerOfFood(agents, food)
 		}
 	}
+}
+
+func (g *Grid) updateWorld(agents []lib.Agent) {
+	if g.iteration < 2000 || (g.iteration % 1000) != 0 {
+		return
+	}
+	switch g.worldDynamics {
+	case "Four":
+		return
+	case "Seasonal":
+		g.seasonalChange(agents)
+	case "Extreme":
+		g.extremeChange(agents)
+	}
+}
+
+func (g *Grid) seasonalChange(agents []lib.Agent) {
+	season := g.season % 6
+	var food *Food
+	switch season {
+	case 0:
+		food = g.foodAt(89,89, agents)
+		if food != nil { food.SetHidden(true) }
+		if food != nil { g.ClearCell(89,89,-1) }
+		g.season = 1
+	case 1:
+		food = g.foodAt(9,9, agents)
+		if food != nil { food.SetHidden(true) }
+		if food != nil { g.ClearCell(9,9,-1) }
+		g.season = 2
+	case 2:
+		food = g.foodAt(89,9, agents)
+		if food != nil { food.SetHidden(true) }
+		if food != nil { g.ClearCell(89,9,-1) }
+		g.season = 3
+	case 3:
+		food = g.foodAt(89,9, agents)
+		if food != nil { food.SetHidden(false) }
+		if food != nil { g.SetCell(89,9, food) }
+		g.season = 4
+	case 4:
+		food = g.foodAt(9,9, agents)
+		if food != nil { food.SetHidden(false) }
+		if food != nil { g.SetCell(9,9, food) }
+		g.season = 5
+	case 5:
+		food = g.foodAt(89,89, agents)
+		if food != nil { food.SetHidden(false) }
+		if food != nil { g.SetCell(89,89, food) }
+		g.season = 0
+	}
+}
+
+func (g *Grid) extremeChange(agents []lib.Agent){
+	extremeSeason := g.extremeSeason % 2
+	var food1, food2, food3 *Food
+	switch extremeSeason {
+	case 0:
+		food1 = g.foodAt(9, 9, agents)
+		food2 = g.foodAt(9, 89, agents)
+		food3 = g.foodAt(89, 9, agents)
+		if food1 != nil { food1.SetHidden(true) }
+		if food2 != nil { food2.SetHidden(true) }
+		if food3 != nil { food3.SetHidden(true) }
+		if food1 != nil { g.ClearCell(9, 9, -1) }
+		if food2 != nil { g.ClearCell(9, 89, -1) }
+		if food3 != nil { g.ClearCell(89, 9, -1) }
+		g.extremeSeason = 1
+	case 1:
+		food1 = g.foodAt(9, 9, agents)
+		food2 = g.foodAt(9, 89, agents)
+		food3 = g.foodAt(89, 9, agents)
+		if food1 != nil { food1.SetHidden(false) }
+		if food2 != nil { food2.SetHidden(false) }
+		if food3 != nil { food3.SetHidden(false) }
+		if food1 != nil { g.SetCell(9, 9, food1) }
+		if food2 != nil { g.SetCell(9, 89, food2) }
+		if food3 != nil { g.SetCell(89, 9, food3) }
+		g.extremeSeason = 0
+	}
+}
+
+func (g *Grid) foodAt(x, y float64, agents []lib.Agent) *Food {
+	for _, agent := range agents {
+		if food, ok := agent.(*Food); ok {
+			if food.X() == x && food.Y() == y && food.Alive() {
+				return food
+			}
+		}
+	}
+	return nil
 }
 
 func (g *Grid) checkAgentVision(agents []lib.Agent, agent *Agent) {
@@ -78,6 +177,11 @@ func (g *Grid) checkAgentVision(agents []lib.Agent, agent *Agent) {
 	for k := 0; k < len(agents); k++ {
 		if agent.ID() == agents[k].ID() || !agents[k].Alive() {
 			continue
+		}
+		if food, ok := agents[k].(*Food); ok {
+			if food.Hidden() {
+				continue
+			}
 		}
 		point := vector{agents[k].X(), agents[k].Y()}
 		if isInsideSector(center, point, vision.leftVector,
@@ -215,6 +319,7 @@ func (g *Grid) ClearCell(x, y float64, id int) {
 	}
 	g.mx.Lock()
 	temp := g.cells[g.idx(x, y)]
+
 	if temp.ID() == id {
 		g.cells[g.idx(x, y)] = nil
 	} else {
@@ -376,6 +481,10 @@ func (g *Grid) findVsionVectors(direction float64, visionLength, visionAngle int
 												float64(visionLength) * math.Cos((direction-(float64(visionAngle)+0.00001))*(math.Pi/180.0))}}
 }
 
-func (g *Grid) SetWorldDynamics(condition string){
-	g.worldDynamics = condition
+func (g *Grid) SetWorldDynamics(condition string) error {
+	if condition == "Four" || condition == "Seasonal" || condition == "Extreme" {
+		g.worldDynamics = condition
+		return nil
+	}
+	return errors.New("season must be one of: Four, Seasonal or Extreme")
 }

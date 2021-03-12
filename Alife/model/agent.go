@@ -404,6 +404,12 @@ func (a *Agent) updateCT(sumOfErrors float64, agents, foods []lib.Agent){
 		releaseRateCT = releaseRateCT / 2
 	}
 	a.cortisol = a.cortisol + releaseRateCT
+	if a.cortisol < 0 {
+		a.cortisol = 0
+	}
+	if a.cortisol > 1 {
+		a.cortisol = 1
+	}
 	a.mutex.Unlock()
 }
 
@@ -512,6 +518,12 @@ func (a *Agent)	ModulateDSI(id int, amount float64){
 func (a *Agent) ModulateCT(amount float64) {
 	a.mutex.Lock()
 	a.cortisol = a.cortisol + amount
+	if a.cortisol < 0 {
+		a.cortisol = 0
+	}
+	if a.cortisol > 1 {
+		a.cortisol = 1
+	}
 	a.mutex.Unlock()
 }
 func (a *Agent) IncreaseOT(intensity float64){
