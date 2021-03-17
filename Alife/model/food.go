@@ -13,6 +13,7 @@ type Food struct {
 	resource	 float64
 	maxResource  float64
 	owner		 *Agent
+	eatingAgents []*Agent
 	// immplementation
 	mutex 		 sync.Mutex
 	id 			 int
@@ -72,6 +73,19 @@ func (f *Food) Resource() float64{
 	defer f.mutex.Unlock()
 	return f.resource
 }
+
+func (f *Food) ResetEatingAgents() {
+	f.mutex.Lock()
+	f.eatingAgents = nil
+	f.mutex.Unlock()
+}
+
+func (f *Food) AddEatingAgent(agent *Agent){
+	f.mutex.Lock()
+	f.eatingAgents = append(f.eatingAgents, agent)
+	f.mutex.Unlock()
+}
+
 func (f *Food) SetOwner(agent *Agent) {
 	f.mutex.Lock()
 	f.owner = agent
@@ -84,6 +98,7 @@ func (f *Food) SetHidden(flag bool) {
 	f.mutex.Unlock()
 }
 
+func (f *Food) EatingAgents() []*Agent { return f.eatingAgents }
 func (f *Food) Hidden() bool { return f.hidden }
 func (f *Food) Alive() bool { return f.alive }
 func (f *Food) Owner() *Agent { return f.owner }

@@ -64,7 +64,7 @@ func (g *Grid) Tick(agents []lib.Agent) {
 		if agent, ok := agents[j].(*Agent); ok {
 			g.checkAgentVision(agents, agent)
 		} else if food, ok := agents[j].(*Food); ok {
-			g.checkOwnerOfFood(agents, food)
+			g.checkOccupyingFood(agents, food)
 		}
 	}
 }
@@ -191,18 +191,24 @@ func (g *Grid) checkAgentVision(agents []lib.Agent, agent *Agent) {
 	}
 }
 
-func (g *Grid) checkOwnerOfFood(agents []lib.Agent, food *Food) {
+func (g *Grid) checkOccupyingFood(agents []lib.Agent, food *Food) {
 	var highestRankAgent *Agent
 	highestRank := 0
+	center := vector{food.X(), food.Y()}
+	food.ResetEatingAgents()
 	for k := 0; k < len(agents); k++ {
 		if agents[k].ID() < 1 {
 			continue
 		}
-		center := vector{food.X(), food.Y()}
 		point := vector{agents[k].X(), agents[k].Y()}
 		relVector := vector{point.x - center.x, point.y - center.y}
-		if isWithinRadius(relVector, 4) && agents[k].(*Agent).Rank() > highestRank {
-			highestRankAgent = agents[k].(*Agent)
+		if isWithinRadius(relVector, 4) {
+			if agents[k].(*Agent).Rank() > highestRank{
+				highestRankAgent = agents[k].(*Agent)
+			}
+			if isWithinRadius(relVector, 1) {
+				food.AddEatingAgent(agents[k].(*Agent))
+			}
 		}
 	}
 	food.SetOwner(highestRankAgent)

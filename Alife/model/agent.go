@@ -34,6 +34,10 @@ type Agent struct {
 	touchIntensity		float64
 	tactileIntensity	float64
 	DSImode				string
+	psychEffEatTogether float64
+	justEaten			bool
+	sharedFoodWith		[]int
+	eatingTogetherIntensity	float64
 
 	stepSize     		float64
 
@@ -85,7 +89,9 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 		touchIntensity		: 0,
 		tactileIntensity	: 0,
 		DSImode				: DSImode,
-
+		psychEffEatTogether : 0.1,
+		justEaten			: false,
+		eatingTogetherIntensity: 0,
 
 		stepSize 			: 1,
 		//----------------
@@ -101,7 +107,7 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 	}, nil
 }
 
-func (a *Agent) Run() {
+func (a *Agent)  Run() {
 	// send data
 	if a.ch != nil { a.ch <- fmt.Sprintf("'[%v, %v, %v, %v, %v]'", a.id, a.energy, a.socialness, a.oxytocin, a.cortisol) }
 	// dont do anything if dead
@@ -129,17 +135,25 @@ func (a *Agent) actionSelection(){
 	socialErr := 1 - a.socialness
 	robotSalience := float64(len(agents))
 	groomMotivation := socialErr + (socialErr * robotSalience)
-
-
 	if groomMotivation > eatMotivation {
-		a.motivation = groomMotivation
-		a.touchIntensity = a.motivation * a.physEffTouch
-		a.tactileIntensity = a.touchIntensity * a.cortisol
-		a.pickAgent(agents, walls)
+		if a.justEaten {
+			a.move(mod(a.direction - 90, 360))
+			a.justEaten = false
+			a.foodTimeWaiting = 0
+			a.sharedEatingFood()
+			a.sharedFoodWith = nil
+		} else {
+			a.motivation = groomMotivation
+			a.touchIntensity = a.motivation * a.physEffTouch
+			a.tactileIntensity = a.touchIntensity * a.cortisol
+			a.pickAgent(agents, walls)
+		}
 	} else {
 		a.motivation = eatMotivation
+		a.eatingTogetherIntensity = a.motivation * a.psychEffEatTogether
 		a.findEatFood(agents, foods, walls)
 	}
+
 	a.updateCT(energyErr + socialErr, agents, foods)
 }
 
@@ -270,9 +284,14 @@ func (a *Agent) findEatFood(agents, foods, walls []lib.Agent){
 		if dist <= 1 {
 			// next to food, so can eat
 			a.eatFood(food.(*Food))
+			a.justEaten = true
+			a.checkEatenWithBondPartner(food.(*Food))
 			if a.energy >= 1 {
 				a.move(mod(a.direction - 90, 360))
 				a.energy = 1
+				a.justEaten = false
+				a.sharedEatingFood()
+				a.sharedFoodWith = nil
 			}
 		} else {
 			// see food, calculate if can approach
@@ -281,7 +300,7 @@ func (a *Agent) findEatFood(agents, foods, walls []lib.Agent){
 	}
 }
 
-func (a *Agent) eatFood(f *Food){
+func (a *Agent) eatFood(f *Food) {
 	if a.foodTimeWaiting < 5 {
 		a.foodTimeWaiting++
 	} else {
@@ -340,10 +359,35 @@ func (a *Agent) move(direction float64){
 	}
 }
 
+func (a *Agent) checkEatenWithBondPartner(food *Food) {
+	for _, agent := range food.EatingAgents() {
+		for _, id := range a.bondPartners{
+			if agent.ID() == id {
+				// there is a bond with some other eating agent
+				if !inList(agent.ID(), a.sharedFoodWith) {
+					a.sharedFoodWith = append(a.sharedFoodWith, agent.ID())
+				}
+			}
+		}
+	}
+}
+
+func (a *Agent) sharedEatingFood() {
+	if a.sharedFoodWith == nil {
+		return
+	}
+	a.IncreaseOT(a.eatingTogetherIntensity)
+	if a.DSImode == "Variable" {
+		for _, id := range a.sharedFoodWith {
+			a.ModulateDSI(id, a.eatingTogetherIntensity*a.cortisol*0.3)
+		}
+	}
+}
+
 func (a *Agent) updateInternals(){
 	a.mutex.Lock()
 	// lose energy
-	a.energy -= a.nutritionChange * a.stepSize
+	a.energy = a.energy - (a.nutritionChange * a.stepSize)
 	// lose and correct socialness
 	if a.socialness > 1 {
 		a.socialness = 1
@@ -364,7 +408,11 @@ func (a *Agent) updateInternals(){
 	for i:=0; i<len(a.DSIstrengths);i++ {
 		if a.DSIstrengths[i] > 2 {
 			a.DSIstrengths[i] = 2
-		} else if a.DSIstrengths[i] < 0 {
+		}
+		if a.DSImode == "Variable" {
+			a.DSIstrengths[i] = a.DSIstrengths[i] * 0.9997
+		}
+		if a.DSIstrengths[i] < 0 {
 			a.DSIstrengths[i] = 0
 		}
 	}
@@ -435,6 +483,16 @@ ________________________________________________________________________________
 ___________________________________________SETUP/GETTERS/SETTERS________________________________________________________
 ________________________________________________________________________________________________________________________
 */
+
+func inList(element int, list []int) bool {
+
+	for _, temp := range list {
+		if temp == element {
+			return true
+		}
+	}
+	return false
+}
 
 func mod(a, b float64) float64 {
 	c := math.Mod(a, b)

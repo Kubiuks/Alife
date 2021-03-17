@@ -110,6 +110,10 @@ func addFood(x, y float64, a *lib.ABM, grid2D *model.Grid) {
 }
 
 func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
+	err := grid2D.SetWorldDynamics(condition)
+	if err != nil {
+		log.Fatal(err)
+	}
 	switch condition{
 	case "Four":
 		addFood(9, 9, a, grid2D)
@@ -126,10 +130,6 @@ func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
 		addFood(89, 89, a, grid2D)
 		addFood(9, 89, a, grid2D)
 		addFood(89, 9, a, grid2D)
-	}
-	err := grid2D.SetWorldDynamics(condition)
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 
