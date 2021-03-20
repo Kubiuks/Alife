@@ -19,7 +19,6 @@ type Agent struct {
 	energy		 		float64
 	socialness	 		float64
 	rank				int
-	rankBasedCortisol	float64
 	stressed			bool
 	nutritionChange		float64
 	socialChange		float64
@@ -61,10 +60,7 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 	if !ok {
 		return nil, errors.New("agent needs a Grid world to operate")
 	}
-	//rankBasedCortisol, err := rankBasedOnCortisol(rank)
-	//if err != nil {
-	//	return nil, err
-	//}
+
 	adaptiveThreshold, err := cortisolThreshold(rank, CortisolThresholdCondition)
 	if err != nil {
 		return nil, err
@@ -81,7 +77,6 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 		oxytocinChange		: 0.0005,
 		cortisolChange		: 0.0005,
 		rank				: rank,
-		//rankBasedCortisol	: rankBasedCortisol,
 		adaptiveThreshold	: adaptiveThreshold,
 		foodTimeWaiting		: 0,
 		motivation			: 0,
@@ -387,7 +382,7 @@ func (a *Agent) sharedEatingFood() {
 func (a *Agent) updateInternals(){
 	a.mutex.Lock()
 	// lose energy
-	a.energy = a.energy - (a.nutritionChange * a.stepSize)
+	a.energy = a.energy - 2 * (a.nutritionChange * a.stepSize)
 	// lose and correct socialness
 	if a.socialness > 1 {
 		a.socialness = 1
@@ -447,7 +442,7 @@ func (a *Agent) updateCT(sumOfErrors float64, agents, foods []lib.Agent){
 			availableFoods += 1
 		}
 	}
-	releaseRateCT := ((sumOfErrors - availableAgents - availableFoods)/2)*a.cortisolChange
+	releaseRateCT := ((sumOfErrors - availableAgents - availableFoods)/2)*2*a.cortisolChange
 	if releaseRateCT < 0 {
 		releaseRateCT = releaseRateCT / 2
 	}
@@ -457,6 +452,11 @@ func (a *Agent) updateCT(sumOfErrors float64, agents, foods []lib.Agent){
 	}
 	if a.cortisol > 1 {
 		a.cortisol = 1
+	}
+	if a.cortisol > a.adaptiveThreshold {
+		a.stressed = true
+	} else {
+		a.stressed = false
 	}
 	a.mutex.Unlock()
 }
