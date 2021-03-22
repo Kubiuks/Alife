@@ -3,7 +3,6 @@ package model
 import (
 	"Alife/lib"
 	"errors"
-	"fmt"
 	"math"
 	"math/rand"
 	"sync"
@@ -48,10 +47,11 @@ type Agent struct {
 	grid         *Grid
 	trail        bool
 	direction    float64
-	ch 			 chan string
+	ch 			 chan []float64
+	numOfAgents	 int
 }
 
-func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bool, CortisolThresholdCondition, DSImode string) (*Agent, error) {
+func NewAgent(abm *lib.ABM, id, rank, numOfAgents int, x, y float64, ch chan []float64, trail bool, CortisolThresholdCondition, DSImode string) (*Agent, error) {
 	world := abm.World()
 	if world == nil {
 		return nil, errors.New("agent needs a World defined to operate")
@@ -86,7 +86,7 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 		DSImode				: DSImode,
 		psychEffEatTogether : 0.1,
 		justEaten			: false,
-		eatingTogetherIntensity: 0,
+		eatingTogetherIntensity: 0.1,
 
 		stepSize 			: 1,
 		//----------------
@@ -99,12 +99,15 @@ func NewAgent(abm *lib.ABM, id, rank int, x, y float64, ch chan string, trail bo
 		trail    : trail,
 		direction: rand.Float64()*360,
 		ch       : ch,
+		numOfAgents: numOfAgents,
 	}, nil
 }
 
 func (a *Agent)  Run() {
 	// send data
-	if a.ch != nil { a.ch <- fmt.Sprintf("'[%v, %v, %v, %v, %v]'", a.id, a.energy, a.socialness, a.oxytocin, a.cortisol) }
+	data := []float64{float64(a.id), a.energy, a.socialness, a.oxytocin, a.cortisol}
+	if a.ch != nil { a.ch <- data }
+
 	// dont do anything if dead
 	if !a.alive{ return }
 
@@ -153,7 +156,7 @@ func (a *Agent) actionSelection(){
 }
 
 func (a *Agent) agentVal(agent *Agent) float64{
-	rankDiff := float64(a.rank - agent.Rank())/5
+	rankDiff := float64(a.rank - agent.Rank())/float64(a.numOfAgents-1)
 	bond := 0.0
 	DSI := 0.0
 	for i, id := range a.bondPartners{

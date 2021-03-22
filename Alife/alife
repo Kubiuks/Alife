@@ -1,4 +1,6 @@
 #!/bin/bash
 
-go run main.go
-python3 graph.py
+set -e
+
+./main "$@"
+python3 graph.py "$@"
