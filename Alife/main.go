@@ -16,11 +16,11 @@ import (
 //goland:noinspection GoBoolExpressions
 func main() {
 	fmt.Printf("Running model\n")
-	if len(os.Args) != 5 {
-		log.Fatal(errors.New("arguements should be: ExperimentName string, WorldDynamics string, Bonds []int, DSImode string"))
+	if len(os.Args) != 6 {
+		log.Fatal(errors.New("arguements should be: ExperimentName string, WorldDynamics string, NumberOfAgents int, Bonds []int, DSImode string"))
 	}
 	// number of runs
-	n := 2
+	n := 100
 
 	// experiment name
 	directoryName := os.Args[1]
@@ -32,11 +32,10 @@ func main() {
 //----------------------------------------------------------------------------------------------------------------------
 	// variables testes in the experiment
 	worldDynamics := os.Args[2]
-	bondedAgents := bonds(os.Args[3])
-	DSImode := os.Args[4]
+	numberOfAgents, _ := strconv.Atoi(os.Args[3])
+	bondedAgents := bonds(os.Args[4])
+	DSImode := os.Args[5]
 
-	// for now always 6 agents
-	numberOfAgents := 6
 	// for now always Neutral, so 0.5 for every agent
 	cortisolThresholdCondition := "Neutral"
 //----------------------------------------------------------------------------------------------------------------------
@@ -53,7 +52,7 @@ func main() {
 	// create a txt file with experiment variables
 	paramsFile, errFile := os.Create("data/"+directoryName+"/params.txt")
 	check(errFile)
-	paramsString := fmt.Sprintf("World Dynamics: %v, \nNumber Of Agents: %v, \nBonded Agents: %v, \nDSImode: %v, \nCortistol Threshold: %v, \n",
+	paramsString := fmt.Sprintf("World Dynamics: %v,\nNumber Of Agents: %v,\nBonded Agents: %v,\nDSImode: %v,\nCortistol Threshold: %v,\n",
 								worldDynamics, numberOfAgents, bondedAgents, DSImode, cortisolThresholdCondition)
 	_, err2 := paramsFile.WriteString(paramsString)
 	check(err2)

@@ -4,39 +4,22 @@ import pandas as pd
 import sys
 
 print("Running analysis")
-n = 2
+
+n = 100
+name = 'data/' + sys.argv[1]
+numOfAgents = int(sys.argv[3])
+
+energy_average      = np.zeros((numOfAgents, 15000))
+socialness_average  = np.zeros((numOfAgents, 15000))
+oxytocin_average    = np.zeros((numOfAgents, 15000))
+cortisol_average    = np.zeros((numOfAgents, 15000))
 
 average_LL_from_runs = []
 
-a1_energy_average = np.array([0] * 15000)
-a2_energy_average = np.array([0] * 15000)
-a3_energy_average = np.array([0] * 15000)
-a4_energy_average = np.array([0] * 15000)
-a5_energy_average = np.array([0] * 15000)
-a6_energy_average = np.array([0] * 15000)
+converter = {}
 
-a1_socialness_average = np.array([0] * 15000)
-a2_socialness_average = np.array([0] * 15000)
-a3_socialness_average = np.array([0] * 15000)
-a4_socialness_average = np.array([0] * 15000)
-a5_socialness_average = np.array([0] * 15000)
-a6_socialness_average = np.array([0] * 15000)
-
-a1_oxytocin_average = np.array([0] * 15000)
-a2_oxytocin_average = np.array([0] * 15000)
-a3_oxytocin_average = np.array([0] * 15000)
-a4_oxytocin_average = np.array([0] * 15000)
-a5_oxytocin_average = np.array([0] * 15000)
-a6_oxytocin_average = np.array([0] * 15000)
-
-a1_cortisol_average = np.array([0] * 15000)
-a2_cortisol_average = np.array([0] * 15000)
-a3_cortisol_average = np.array([0] * 15000)
-a4_cortisol_average = np.array([0] * 15000)
-a5_cortisol_average = np.array([0] * 15000)
-a6_cortisol_average = np.array([0] * 15000)
-
-name = 'data/' + sys.argv[1]
+for v in range(numOfAgents):
+    converter['Agent_'+str(v+1)] = lambda x: list(map(float, x[1:-1].split(',')))
 
 for i in range(n):
     if ((i+1) % 10) == 0:
@@ -44,122 +27,75 @@ for i in range(n):
 
     file = name + '/run_' + str(i+1) + '.csv'
 
-    data = pd.read_csv(file, header=0, quotechar="'", converters={'Agent_1': lambda x: list(map(float, x[1:-1].split(','))),
-                                                                  'Agent_2': lambda x: list(map(float, x[1:-1].split(','))),
-                                                                  'Agent_3': lambda x: list(map(float, x[1:-1].split(','))),
-                                                                  'Agent_4': lambda x: list(map(float, x[1:-1].split(','))),
-                                                                  'Agent_5': lambda x: list(map(float, x[1:-1].split(','))),
-                                                                  'Agent_6': lambda x: list(map(float, x[1:-1].split(',')))})
-    a1 = np.array(data['Agent_1'].values.tolist())
-    a2 = np.array(data['Agent_2'].values.tolist())
-    a3 = np.array(data['Agent_3'].values.tolist())
-    a4 = np.array(data['Agent_4'].values.tolist())
-    a5 = np.array(data['Agent_5'].values.tolist())
-    a6 = np.array(data['Agent_6'].values.tolist())
+    data = pd.read_csv(file, header=0, quotechar="'", converters=converter)
 
-    a1_energy_average = np.add(a1_energy_average, a1[:, 1])
-    a2_energy_average = np.add(a2_energy_average, a2[:, 1])
-    a3_energy_average = np.add(a3_energy_average, a3[:, 1])
-    a4_energy_average = np.add(a4_energy_average, a4[:, 1])
-    a5_energy_average = np.add(a5_energy_average, a5[:, 1])
-    a6_energy_average = np.add(a6_energy_average, a6[:, 1])
+    agents = []
+    for z in range(numOfAgents):
+        temp = np.array(data['Agent_' + str(z+1)].values.tolist())
+        agents.append(temp)
+    agents = np.asarray(agents)
 
-    a1_socialness_average = np.add(a1_socialness_average, a1[:, 2])
-    a2_socialness_average = np.add(a2_socialness_average, a2[:, 2])
-    a3_socialness_average = np.add(a3_socialness_average, a3[:, 2])
-    a4_socialness_average = np.add(a4_socialness_average, a4[:, 2])
-    a5_socialness_average = np.add(a5_socialness_average, a5[:, 2])
-    a6_socialness_average = np.add(a6_socialness_average, a6[:, 2])
-
-    a1_oxytocin_average = np.add(a1_oxytocin_average, a1[:, 3])
-    a2_oxytocin_average = np.add(a2_oxytocin_average, a2[:, 3])
-    a3_oxytocin_average = np.add(a3_oxytocin_average, a3[:, 3])
-    a4_oxytocin_average = np.add(a4_oxytocin_average, a4[:, 3])
-    a5_oxytocin_average = np.add(a5_oxytocin_average, a5[:, 3])
-    a6_oxytocin_average = np.add(a6_oxytocin_average, a6[:, 3])
-
-    a1_cortisol_average = np.add(a1_cortisol_average, a1[:, 4])
-    a2_cortisol_average = np.add(a2_cortisol_average, a2[:, 4])
-    a3_cortisol_average = np.add(a3_cortisol_average, a3[:, 4])
-    a4_cortisol_average = np.add(a4_cortisol_average, a4[:, 4])
-    a5_cortisol_average = np.add(a5_cortisol_average, a5[:, 4])
-    a6_cortisol_average = np.add(a6_cortisol_average, a6[:, 4])
+    for j in range(numOfAgents):
+        energy_average[j]       = np.add(energy_average[j], agents[j][:, 1])
+        socialness_average[j]   = np.add(socialness_average[j], agents[j][:, 2])
+        oxytocin_average[j]     = np.add(oxytocin_average[j], agents[j][:, 3])
+        cortisol_average[j]     = np.add(cortisol_average[j], agents[j][:, 4])
 
     life_lengths = []
-    for agent in [a1[:, 1], a2[:, 1], a3[:, 1], a4[:, 1], a5[:, 1], a6[:, 1]]:
-        for j, e in enumerate(agent):
+    for agent in agents:
+        for k, e in enumerate(agent[:, 1]):
             if e <= 0:
-                life_lengths.append(j+1)
+                life_lengths.append(k+1)
                 break
-            elif j+1 == 15000:
-                life_lengths.append(j+1)
+            elif k+1 == 15000:
+                life_lengths.append(k+1)
 
-    average_life_length_in_percent = (sum(life_lengths) / 6) / 15000
+    average_life_length_in_percent = (sum(life_lengths) / numOfAgents) / 15000
     average_LL_from_runs.append(average_life_length_in_percent)
 
-average_LL_from_experiment = sum(average_LL_from_runs) / n
+# ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# --------------------------------AVERAGE OUT, PLOT, WRITE TO FILE------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+average_LL_from_experiment = round((sum(average_LL_from_runs) / n), 4)
 print(average_LL_from_experiment)
 
-a1_energy_average = np.divide(a1_energy_average, n)
-a2_energy_average = np.divide(a2_energy_average, n)
-a3_energy_average = np.divide(a3_energy_average, n)
-a4_energy_average = np.divide(a4_energy_average, n)
-a5_energy_average = np.divide(a5_energy_average, n)
-a6_energy_average = np.divide(a6_energy_average, n)
+for j in range(numOfAgents):
+    energy_average[j]       = np.divide(energy_average[j], n)
+    socialness_average[j]   = np.divide(socialness_average[j], n)
+    oxytocin_average[j]     = np.divide(oxytocin_average[j], n)
+    cortisol_average[j]     = np.divide(cortisol_average[j], n)
 
-a1_socialness_average = np.divide(a1_socialness_average, n)
-a2_socialness_average = np.divide(a2_socialness_average, n)
-a3_socialness_average = np.divide(a3_socialness_average, n)
-a4_socialness_average = np.divide(a4_socialness_average, n)
-a5_socialness_average = np.divide(a5_socialness_average, n)
-a6_socialness_average = np.divide(a6_socialness_average, n)
+# WRITE TO FILE
+f = open(name+'/results.txt', "w")
+f.write("Average Life Length: {0:.2%},\n".format(average_LL_from_experiment))
 
-a1_oxytocin_average = np.divide(a1_oxytocin_average, n)
-a2_oxytocin_average = np.divide(a2_oxytocin_average, n)
-a3_oxytocin_average = np.divide(a3_oxytocin_average, n)
-a4_oxytocin_average = np.divide(a4_oxytocin_average, n)
-a5_oxytocin_average = np.divide(a5_oxytocin_average, n)
-a6_oxytocin_average = np.divide(a6_oxytocin_average, n)
+# PLOT
+for j in range(numOfAgents):
+    plt.plot(energy_average[j])
+plt.title("Average Energy")
 
-a1_cotisol_average = np.divide(a1_cortisol_average, n)
-a2_cotisol_average = np.divide(a2_cortisol_average, n)
-a3_cotisol_average = np.divide(a3_cortisol_average, n)
-a4_cotisol_average = np.divide(a4_cortisol_average, n)
-a5_cotisol_average = np.divide(a5_cortisol_average, n)
-a6_cotisol_average = np.divide(a6_cortisol_average, n)
+plt.savefig(name+'/average_energy.pdf', bbox_inches='tight')
+plt.clf()
 
-plt.plot(a1_energy_average)
-plt.plot(a2_energy_average)
-plt.plot(a3_energy_average)
-plt.plot(a4_energy_average)
-plt.plot(a5_energy_average)
-plt.plot(a6_energy_average)
+for j in range(numOfAgents):
+    plt.plot(socialness_average[j])
+plt.title("Average Socialness")
 
-plt.show()
+plt.savefig(name+'/average_socialness.pdf', bbox_inches='tight')
+plt.clf()
 
-plt.plot(a1_socialness_average)
-plt.plot(a2_socialness_average)
-plt.plot(a3_socialness_average)
-plt.plot(a4_socialness_average)
-plt.plot(a5_socialness_average)
-plt.plot(a6_socialness_average)
+for j in range(numOfAgents):
+    plt.plot(oxytocin_average[j])
+plt.title("Average Oxytocin")
 
-plt.show()
+plt.savefig(name+'/average_oxytocin.pdf', bbox_inches='tight')
+plt.clf()
 
-plt.plot(a1_oxytocin_average)
-plt.plot(a2_oxytocin_average)
-plt.plot(a3_oxytocin_average)
-plt.plot(a4_oxytocin_average)
-plt.plot(a5_oxytocin_average)
-plt.plot(a6_oxytocin_average)
+for j in range(numOfAgents):
+    plt.plot(cortisol_average[j])
+plt.title("Average Cortisol")
 
-plt.show()
-
-plt.plot(a1_cortisol_average)
-plt.plot(a2_cortisol_average)
-plt.plot(a3_cortisol_average)
-plt.plot(a4_cortisol_average)
-plt.plot(a5_cortisol_average)
-plt.plot(a6_cortisol_average)
-
-plt.show()
+plt.savefig(name+'/average_cortisol.pdf', bbox_inches='tight')
+plt.clf()
