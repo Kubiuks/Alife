@@ -204,7 +204,7 @@ for i in range(n):
         for z, aggression in enumerate(agent[:, 6]):
             if aggression != 0:
                 agent_aggressions += 1
-                phase = get_phasae(v+1)-1
+                phase = get_phasae(z+1)-1
                 aggression_by_phase[phase] += 1
                 if agent_id in bonds and int(aggression) in bonds:
                     intra_bond_aggressions += 1
