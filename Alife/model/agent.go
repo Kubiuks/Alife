@@ -35,6 +35,8 @@ type Agent struct {
 	psychEffEatTogether float64
 	justEaten			bool
 	sharedFoodWith		[]int
+	groomedWith			int
+	aggresionOn			int
 	eatingTogetherIntensity	float64
 
 	stepSize     		float64
@@ -86,7 +88,9 @@ func NewAgent(abm *lib.ABM, id, rank, numOfAgents int, x, y float64, ch chan []f
 		DSImode				: DSImode,
 		psychEffEatTogether : 0.1,
 		justEaten			: false,
-		eatingTogetherIntensity: 0.1,
+		groomedWith			: 0,
+		aggresionOn			: 0,
+		eatingTogetherIntensity: 0,
 
 		stepSize 			: 1,
 		//----------------
@@ -105,8 +109,12 @@ func NewAgent(abm *lib.ABM, id, rank, numOfAgents int, x, y float64, ch chan []f
 
 func (a *Agent)  Run() {
 	// send data
-	data := []float64{float64(a.id), a.energy, a.socialness, a.oxytocin, a.cortisol}
+	data := []float64{float64(a.id), a.energy, a.socialness, a.oxytocin, a.cortisol, float64(a.groomedWith), float64(a.aggresionOn)}
 	if a.ch != nil { a.ch <- data }
+
+	// reset flags
+	a.groomedWith = 0
+	a.aggresionOn = 0
 
 	// dont do anything if dead
 	if !a.alive{ return }
@@ -214,6 +222,7 @@ func (a *Agent) groomOrAggresionOrAvoid(agentVal float64, agent *Agent) {
 
 func (a *Agent) groom(agent *Agent){
 	if distance(a.x, a.y, agent.X(), agent.Y()) < 2 {
+		a.groomedWith = agent.ID()
 		a.IncreaseOT(a.touchIntensity)
 		agent.IncreaseOT(a.touchIntensity)
 		a.socialness = a.socialness + a.tactileIntensity * 0.25
@@ -230,6 +239,7 @@ func (a *Agent) groom(agent *Agent){
 
 func (a *Agent) aggresion(agent *Agent){
 	if distance(a.x, a.y, agent.X(), agent.Y()) < 2 {
+		a.aggresionOn = agent.ID()
 		a.socialness = a.socialness + a.tactileIntensity * 0.25
 		a.ModulateCT(-1*a.tactileIntensity*0.3)
 		agent.ModulateCT(a.tactileIntensity*0.3)

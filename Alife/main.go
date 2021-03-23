@@ -16,14 +16,15 @@ import (
 //goland:noinspection GoBoolExpressions
 func main() {
 	fmt.Printf("Running model\n")
-	if len(os.Args) != 6 {
-		log.Fatal(errors.New("arguements should be: ExperimentName string, WorldDynamics string, NumberOfAgents int, Bonds []int, DSImode string"))
+	if len(os.Args) != 7 {
+		log.Fatal(errors.New("arguements should be: ExperimentName string, numberOfRuns int, WorldDynamics string, NumberOfAgents int, Bonds []int, DSImode string"))
 	}
-	// number of runs
-	n := 100
 
 	// experiment name
 	directoryName := os.Args[1]
+
+	// number of runs
+	n, _ := strconv.Atoi(os.Args[2])
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,10 +32,10 @@ func main() {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 	// variables testes in the experiment
-	worldDynamics := os.Args[2]
-	numberOfAgents, _ := strconv.Atoi(os.Args[3])
-	bondedAgents := bonds(os.Args[4])
-	DSImode := os.Args[5]
+	worldDynamics := os.Args[3]
+	numberOfAgents, _ := strconv.Atoi(os.Args[4])
+	bondedAgents := bonds(os.Args[5])
+	DSImode := os.Args[6]
 
 	// for now always Neutral, so 0.5 for every agent
 	cortisolThresholdCondition := "Neutral"
@@ -52,8 +53,8 @@ func main() {
 	// create a txt file with experiment variables
 	paramsFile, errFile := os.Create("data/"+directoryName+"/params.txt")
 	check(errFile)
-	paramsString := fmt.Sprintf("World Dynamics: %v,\nNumber Of Agents: %v,\nBonded Agents: %v,\nDSImode: %v,\nCortistol Threshold: %v,\n",
-								worldDynamics, numberOfAgents, bondedAgents, DSImode, cortisolThresholdCondition)
+	paramsString := fmt.Sprintf("Runs: %v,\nWorld Dynamics: %v,\nNumber Of Agents: %v,\nBonded Agents: %v,\nDSImode: %v,\nCortistol Threshold: %v,\n",
+								n, worldDynamics, numberOfAgents, bondedAgents, DSImode, cortisolThresholdCondition)
 	_, err2 := paramsFile.WriteString(paramsString)
 	check(err2)
 
@@ -201,7 +202,7 @@ func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
 
 func initialiseBonds(bondedAgents []int, numberOfAgents int, a *lib.ABM) error {
 	for i:= 0; i < len(bondedAgents); i++ {
-		if bondedAgents[i] < 1 || bondedAgents[i] > numberOfAgents { return errors.New("invalid agent id") }
+		if bondedAgents[i] < 1 || bondedAgents[i] > numberOfAgents { return errors.New("invalid agent id. Agents id is an int and must be from range {1:numOfAgents}") }
 		for j:=0; j < len(bondedAgents); j++ {
 			if i != j {
 				if bondedAgents[i] == bondedAgents[j]{
@@ -242,7 +243,7 @@ func bonds(arg string) []int{
 	for _, i := range t {
 		j, err := strconv.Atoi(i)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		t2 = append(t2, j)
 	}
