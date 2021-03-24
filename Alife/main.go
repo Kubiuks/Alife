@@ -164,7 +164,6 @@ func addAgent(x, y float64, id, rank, numOfAgents int, a *lib.ABM, grid2D *model
 	}
 	a.AddAgent(cell)
 	grid2D.SetCell(cell.X(), cell.Y(), cell)
-	grid2D.SetCell(cell.X(), cell.Y(), cell)
 }
 
 func addFood(x, y float64, a *lib.ABM, grid2D *model.Grid) {
