@@ -69,10 +69,10 @@ aggression_from_runs_by_bonded = []
 aggression_from_runs_by_unbonded = []
 intra_bond_grooming_from_runs = []
 intra_bond_aggression_from_runs = []
-grooming_by_phase = [0] * 15
-aggression_by_phase = [0] * 15
-intra_bond_grooming_by_phase = [0] * 15
-intra_bond_aggression_by_phase = [0] * 15
+grooming_by_phase_from_runs = []
+aggression_by_phase_from_runs = []
+intra_bond_grooming_by_phase_from_runs = []
+intra_bond_aggression_by_phase_from_runs = []
 
 average_CT_from_runs = []
 bonded_average_CT_from_runs = []
@@ -145,6 +145,11 @@ for i in range(n):
     aggressions_by_unbonded = 0
     intra_bond_grooms = 0
     intra_bond_aggressions = 0
+
+    grooming_by_phase = [0] * 15
+    aggression_by_phase = [0] * 15
+    intra_bond_grooming_by_phase = [0] * 15
+    intra_bond_aggression_by_phase = [0] * 15
 
     for agent in agents:
         agent_id = int(agent[0, 0])
@@ -224,37 +229,37 @@ for i in range(n):
     # life length
     average_life_length_in_percent = (sum(life_lengths) / numOfAgents) / 15000
     average_LL_from_runs.append(average_life_length_in_percent)
-    bonded_average_life_length_in_percent = 0
+    bonded_average_life_length_in_percent = 0.0
     if len(list_bonds) != 0:
         bonded_average_life_length_in_percent = (sum(bonded_LL) / len(list_bonds)) / 15000
     bonded_average_LL_from_runs.append(bonded_average_life_length_in_percent)
-    unbonded_average_life_length_in_percent = 0
+    unbonded_average_life_length_in_percent = 0.0
     if numOfAgents - len(list_bonds) != 0:
         unbonded_average_life_length_in_percent = (sum(unbonded_LL) / (numOfAgents - len(list_bonds))) / 15000
     unbonded_average_LL_from_runs.append(unbonded_average_life_length_in_percent)
 
     # Physiological wellbeing
     average_PW_from_runs.append(sum(agent_PWs) / numOfAgents)
-    temp_bonded_pw = 0
+    temp_bonded_pw = 0.0
     if len(list_bonds) != 0:
         temp_bonded_pw = sum(bonded_PWs) / len(list_bonds)
     bonded_average_PW_from_runs.append(temp_bonded_pw)
-    temp_unbonded_pw = 0
+    temp_unbonded_pw = 0.0
     if numOfAgents - len(list_bonds) != 0:
         temp_unbonded_pw = sum(unbonded_PWs) / (numOfAgents - len(list_bonds))
     unbonded_average_PW_from_runs.append(temp_unbonded_pw)
 
     # Hormones
     average_CT_from_runs.append(sum(agent_CTs) / numOfAgents)
-    temp_bonded_ct = 0
+    temp_bonded_ct = 0.0
     if len(list_bonds) != 0:
         temp_bonded_ct = sum(bonded_CTs) / len(list_bonds)
     bonded_average_CT_from_runs.append(temp_bonded_ct)
-    temp_unbonded_ct = 0
+    temp_unbonded_ct = 0.0
     if numOfAgents - len(list_bonds) != 0:
         temp_unbonded_ct = sum(unbonded_CTs) / (numOfAgents - len(list_bonds))
     unbonded_average_CT_from_runs.append(temp_unbonded_ct)
-    temp_bonded_ot = 0
+    temp_bonded_ot = 0.0
     if len(list_bonds) != 0:
         temp_bonded_ot = sum(bonded_OTs) / len(list_bonds)
     bonded_average_OT_from_runs.append(temp_bonded_ot)
@@ -268,6 +273,10 @@ for i in range(n):
     aggression_from_runs_by_unbonded.append(aggressions_by_unbonded)
     intra_bond_grooming_from_runs.append(intra_bond_grooms)
     intra_bond_aggression_from_runs.append(intra_bond_aggressions)
+    grooming_by_phase_from_runs.append(grooming_by_phase)
+    aggression_by_phase_from_runs.append(aggression_by_phase)
+    intra_bond_grooming_by_phase_from_runs.append(intra_bond_grooming_by_phase)
+    intra_bond_aggression_by_phase_from_runs.append(intra_bond_aggression_by_phase)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -317,12 +326,114 @@ agents_average_aggression_from_experiment = []
 for j in range(numOfAgents):
     agents_average_grooming_from_experiment.append(round(sum(agents_grooming_from_runs[j]) / n))
     agents_average_aggression_from_experiment.append(round(sum(agents_aggression_from_runs[j]) / n))
-average_grooming_by_phase = np.divide(grooming_by_phase, n)
-average_aggression_by_phase = np.divide(aggression_by_phase, n)
-average_intra_bond_grooming_by_phase = np.divide(intra_bond_grooming_by_phase, n)
-average_intra_bond_aggression_by_phase = np.divide(intra_bond_aggression_by_phase, n)
+average_grooming_by_phase = np.divide(np.sum(grooming_by_phase_from_runs, axis=0), n)
+average_aggression_by_phase = np.divide(np.sum(aggression_by_phase_from_runs, axis=0), n)
+average_intra_bond_grooming_by_phase = np.divide(np.sum(intra_bond_grooming_by_phase_from_runs, axis=0), n)
+average_intra_bond_aggression_by_phase = np.divide(np.sum(intra_bond_aggression_by_phase_from_runs, axis=0), n)
 
 # WRITE TO FILE
+
+# AVERAGES FROM RUNS, for statistics
+# LL
+f = open(name+'/LL.csv', "w")
+f.write("All,Bonded,Unbonded,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1))
+    if j != numOfAgents-1:
+        f.write(",")
+for j in range(n):
+    f.write("\n{0:.2},{1:.2},{2:.2},".format(average_LL_from_runs[j], bonded_average_LL_from_runs[j], unbonded_average_LL_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0:.2}".format(agents_LL_from_runs[k][j]))
+        if k != numOfAgents-1:
+            f.write(",")
+
+f.close()
+
+# PW
+f = open(name+'/PW.csv', "w")
+f.write("All,Bonded,Unbonded,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1))
+    if j != numOfAgents-1:
+        f.write(",")
+for j in range(n):
+    f.write("\n{0:.2},{1:.2},{2:.2},".format(average_PW_from_runs[j], bonded_average_PW_from_runs[j], unbonded_average_PW_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0:.2}".format(agents_PW_from_runs[k][j]))
+        if k != numOfAgents-1:
+            f.write(",")
+
+f.close()
+
+# CT
+f = open(name+'/CT.csv', "w")
+f.write("All,Bonded,Unbonded,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1))
+    if j != numOfAgents-1:
+        f.write(",")
+for j in range(n):
+    f.write("\n{0:.2},{1:.2},{2:.2},".format(average_CT_from_runs[j], bonded_average_CT_from_runs[j], unbonded_average_CT_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0:.2}".format(agents_CT_from_runs[k][j]))
+        if k != numOfAgents-1:
+            f.write(",")
+
+f.close()
+
+# OT
+f = open(name+'/OT.csv', "w")
+f.write("Bonded")
+if len(list_bonds) != 0:
+    f.write(",")
+for j, b in enumerate(list_bonds):
+    f.write("Agent_" + str(b))
+    if j != len(list_bonds)-1:
+        f.write(",")
+for j in range(n):
+    f.write("\n{0:.2}".format(bonded_average_OT_from_runs[j]))
+    if len(list_bonds) != 0:
+        f.write(",")
+    t = 0
+    for k in range(numOfAgents):
+        if k+1 in bonds:
+            t += 1
+            f.write("{0:.2}".format(agents_OT_from_runs[k][j]))
+            if t != len(list_bonds):
+                f.write(",")
+
+f.close()
+
+# GROOMING
+f = open(name+'/Grooming.csv', "w")
+f.write("All,Bonded,Unbonded,Intra-bond,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1) + ",")
+f.write("By_phase,Intra-bond_by_phase")
+for j in range(n):
+    f.write("\n{0},{1},{2},{3},".format(grooming_from_runs[j], grooming_from_runs_by_bonded[j], grooming_from_runs_by_unbonded[j], intra_bond_grooming_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0},".format(agents_grooming_from_runs[k][j]))
+    f.write("{0},{1}".format(grooming_by_phase_from_runs[j], intra_bond_grooming_by_phase_from_runs[j]))
+
+f.close()
+
+# AGGRESION
+f = open(name+'/Aggresion.csv', "w")
+f.write("All,Bonded,Unbonded,Intra-bond,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1) + ",")
+f.write("By_phase,Intra-bond_by_phase")
+for j in range(n):
+    f.write("\n{0},{1},{2},{3},".format(aggression_from_runs[j], aggression_from_runs_by_bonded[j], aggression_from_runs_by_unbonded[j], intra_bond_aggression_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0},".format(agents_aggression_from_runs[k][j]))
+    f.write("{0},{1}".format(aggression_by_phase_from_runs[j], intra_bond_aggression_by_phase_from_runs[j]))
+
+f.close()
+
+# RESULTS Experiment
 f = open(name+'/results.txt', "w")
 f.write("Life Length:\n")
 f.write("All Agents Average Life Length: {0:.2%},\n".format(average_LL_from_experiment))
