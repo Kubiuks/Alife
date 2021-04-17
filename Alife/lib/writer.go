@@ -16,7 +16,7 @@ type Writer struct {
 }
 
 func NewWriter(finished chan bool, ch chan []float64, name string, n int) *Writer {
-	f, err := os.Create("data/"+name)
+	f, err := os.Create(name)
 	check(err)
 	return &Writer{
 		finished 	: finished,

@@ -16,15 +16,12 @@ import (
 //goland:noinspection GoBoolExpressions
 func main() {
 	fmt.Printf("Running model\n")
-	if len(os.Args) != 7 {
-		log.Fatal(errors.New("arguements should be: ExperimentName string, numberOfRuns int, WorldDynamics string, NumberOfAgents int, Bonds []int, DSImode string"))
+	if len(os.Args) != 6 {
+		log.Fatal(errors.New("arguements should be: numberOfRuns int, WorldDynamics string, NumberOfAgents int, Bonds []int, DSImode string"))
 	}
 
-	// experiment name
-	directoryName := os.Args[1]
-
 	// number of runs
-	n, _ := strconv.Atoi(os.Args[2])
+	n, _ := strconv.Atoi(os.Args[1])
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,10 +29,10 @@ func main() {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 	// variables testes in the experiment
-	worldDynamics := os.Args[3]
-	numberOfAgents, _ := strconv.Atoi(os.Args[4])
-	bondedAgents := bonds(os.Args[5])
-	DSImode := os.Args[6]
+	worldDynamics := os.Args[2]
+	numberOfAgents, _ := strconv.Atoi(os.Args[3])
+	bondedAgents := bonds(os.Args[4])
+	DSImode := os.Args[5]
 
 	// for now always Neutral, so 0.5 for every agent
 	cortisolThresholdCondition := "Neutral"
@@ -46,9 +43,15 @@ func main() {
 //----------------------------------------------------------------------------------------------------------------------
 
 	// create directory for this experiment's data
+	directoryName := worldDynamics + "_" + os.Args[4] + "_" + DSImode
 	name := "data/" + directoryName
 	if _, errDir := os.Stat(name); os.IsNotExist(errDir) {
 		_ = os.Mkdir(name, 0700)
+	}
+	// subdirectory for runs
+	subdirectory := name + "/runs"
+	if _, errDir := os.Stat(subdirectory); os.IsNotExist(errDir) {
+		_ = os.Mkdir(subdirectory, 0700)
 	}
 	// create a txt file with experiment variables
 	paramsFile, errFile := os.Create("data/"+directoryName+"/params.txt")
@@ -65,7 +68,7 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 
 		iterations := 15000
-		filename := directoryName + "/run_" + strconv.Itoa(i+1) + ".csv"
+		filename := subdirectory + "/run_" + strconv.Itoa(i+1) + ".csv"
 
 		// world setup
 		visualisation := false
@@ -181,7 +184,7 @@ func setupWorld(a *lib.ABM, grid2D *model.Grid, condition string) {
 		log.Fatal(err)
 	}
 	switch condition{
-	case "Four":
+	case "Static":
 		addFood(9, 9, a, grid2D)
 		addFood(89, 89, a, grid2D)
 		addFood(9, 89, a, grid2D)

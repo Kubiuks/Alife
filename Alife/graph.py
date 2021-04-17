@@ -39,10 +39,11 @@ def get_phasae(number):
 
 print("Running analysis")
 
-name = 'data/' + sys.argv[1]
-n = int(sys.argv[2])
-numOfAgents = int(sys.argv[4])
-raw_bonds = sys.argv[5]
+name = 'data/' + sys.argv[2] + '_' + sys.argv[4] + '_' + sys.argv[5]
+subdirectory = name + '/runs'
+n = int(sys.argv[1])
+numOfAgents = int(sys.argv[3])
+raw_bonds = sys.argv[4]
 temp = raw_bonds.replace('[', '')
 temp2 = temp.replace(']', '')
 list_bonds = [int(s) for s in temp2.split(sep=',') if s.isdigit()]
@@ -107,7 +108,7 @@ for i in range(n):
     if ((i+1) % 10) == 0:
         print("Iteration:", i+1)
 
-    file = name + '/run_' + str(i+1) + '.csv'
+    file = subdirectory + '/run_' + str(i+1) + '.csv'
 
     data = pd.read_csv(file, header=0, quotechar="'", converters=converter)
 

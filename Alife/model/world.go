@@ -74,7 +74,7 @@ func (g *Grid) updateWorld(agents []lib.Agent) {
 		return
 	}
 	switch g.worldDynamics {
-	case "Four":
+	case "Static":
 		return
 	case "Seasonal":
 		g.seasonalChange(agents)
@@ -488,9 +488,9 @@ func (g *Grid) findVsionVectors(direction float64, visionLength, visionAngle int
 }
 
 func (g *Grid) SetWorldDynamics(condition string) error {
-	if condition == "Four" || condition == "Seasonal" || condition == "Extreme" {
+	if condition == "Static" || condition == "Seasonal" || condition == "Extreme" {
 		g.worldDynamics = condition
 		return nil
 	}
-	return errors.New("season must be one of: Four, Seasonal or Extreme")
+	return errors.New("season must be one of: Static, Seasonal or Extreme")
 }
