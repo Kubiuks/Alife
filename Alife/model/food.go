@@ -50,7 +50,7 @@ func (f *Food) Run() {
 		return
 	}
 	if f.resource < f.maxResource {
-		f.resource += 0.004
+		f.resource += 0.001
 	}
 	if f.resource > f.maxResource {
 		f.resource = f.maxResource

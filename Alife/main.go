@@ -41,7 +41,10 @@ func main() {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-
+	// create data directory if does not exist
+	if _, errDir := os.Stat("data"); os.IsNotExist(errDir) {
+		_ = os.Mkdir("data", 0700)
+	}
 	// create directory for this experiment's data
 	directoryName := worldDynamics + "_" + os.Args[4] + "_" + DSImode
 	name := "data/" + directoryName
@@ -114,7 +117,7 @@ func main() {
 		if visualisation {
 			a.SetReportFunc(func(a *lib.ABM) {
 				chGrid <- grid2D.Dump(func(a lib.Agent) int {
-					time.Sleep(100 * time.Nanosecond)
+					time.Sleep(400 * time.Nanosecond)
 					if a == nil {
 						return 0
 					}

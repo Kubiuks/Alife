@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -e
+
+go run main.go 200 Static 6 [] Fixed
+python3 graph.py 200 Static 6 [] Fixed
+
+go run main.go 200 Static 6 [1,5,6] Fixed
+python3 graph.py 200 Static 6 [1,5,6] Fixed
+go run main.go 200 Static 6 [1,5,6] Variable
+python3 graph.py 200 Static 6 [1,5,6] Variable
+
+go run main.go 200 Static 6 [2,3,4] Fixed
+python3 graph.py 200 Static 6 [2,3,4] Fixed
+go run main.go 200 Static 6 [2,3,4] Variable
+python3 graph.py 200 Static 6 [2,3,4] Variable
+
+go run main.go 200 Static 6 [1,2,3] Fixed
+python3 graph.py 200 Static 6 [1,2,3] Fixed
+go run main.go 200 Static 6 [1,2,3] Variable
+python3 graph.py 200 Static 6 [1,2,3] Variable
+
+go run main.go 200 Seasonal 6 [] Fixed
+python3 graph.py 200 Seasonal 6 [] Fixed
+
+go run main.go 200 Seasonal 6 [1,5,6] Fixed
+python3 graph.py 200 Seasonal 6 [1,5,6] Fixed
+go run main.go 200 Seasonal 6 [1,5,6] Variable
+python3 graph.py 200 Seasonal 6 [1,5,6] Variable
+
+go run main.go 200 Seasonal 6 [2,3,4] Fixed
+python3 graph.py 200 Seasonal 6 [2,3,4] Fixed
+go run main.go 200 Seasonal 6 [2,3,4] Variable
+python3 graph.py 200 Seasonal 6 [2,3,4] Variable
+
+go run main.go 200 Seasonal 6 [1,2,3] Fixed
+python3 graph.py 200 Seasonal 6 [1,2,3] Fixed
+go run main.go 200 Seasonal 6 [1,2,3] Variable
+python3 graph.py 200 Seasonal 6 [1,2,3] Variable
+
+go run main.go 200 Extreme 6 [] Fixed
+python3 graph.py 200 Extreme 6 [] Fixed
+
+go run main.go 200 Extreme 6 [1,5,6] Fixed
+python3 graph.py 200 Extreme 6 [1,5,6] Fixed
+go run main.go 200 Extreme 6 [1,5,6] Variable
+python3 graph.py 200 Extreme 6 [1,5,6] Variable
+
+go run main.go 200 Extreme 6 [2,3,4] Fixed
+python3 graph.py 200 Extreme 6 [2,3,4] Fixed
+go run main.go 200 Extreme 6 [2,3,4] Variable
+python3 graph.py 200 Extreme 6 [2,3,4] Variable
+
+go run main.go 200 Extreme 6 [1,2,3] Fixed
+python3 graph.py 200 Extreme 6 [1,2,3] Fixed
+go run main.go 200 Extreme 6 [1,2,3] Variable
+python3 graph.py 200 Extreme 6 [1,2,3] Variable

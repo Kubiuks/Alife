@@ -76,7 +76,7 @@ func (a *ABM) StartSimulation() {
 		if a.World() != nil {
 			a.World().Tick(a.agents)
 		}
-
+		//fmt.Printf("%v\n", i)
 		var wg sync.WaitGroup
 		for j := 0; j < a.AgentsCount(); j++ {
 			wg.Add(1)

@@ -325,10 +325,13 @@ func (g *Grid) ClearCell(x, y float64, id int) {
 	}
 	g.mx.Lock()
 	temp := g.cells[g.idx(x, y)]
-
+	if temp == nil {
+		g.mx.Unlock()
+		return
+	}
 	if temp.ID() == id {
 		g.cells[g.idx(x, y)] = nil
-	} else {
+	} else if temp.ID() == -2 {
 		restFromHolder, _ := temp.(*HolderAgent).DeleteAgent(id)
 		g.cells[g.idx(x, y)] = restFromHolder
 	}

@@ -2,12 +2,5 @@
 
 set -e
 
-#go run main.go 1000 Static 6 [] Fixed
-#python3 graph.py 1000 Static 6 [] Fixed
-#go run main.go 1000 Seasonal 6 [] Fixed
-#python3 graph.py 1000 Seasonal 6 [] Fixed
-#go run main.go 1000 Extreme 6 [] Fixed
-#python3 graph.py 1000 Extreme 6 [] Fixed
-
 go run main.go "$@"
 python3 graph.py "$@"

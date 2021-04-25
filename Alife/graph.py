@@ -35,6 +35,7 @@ def get_phasae(number):
         return 14
     if 14000 < number <= 15000:
         return 15
+    return 0
 
 
 print("Running analysis")
@@ -48,11 +49,12 @@ temp = raw_bonds.replace('[', '')
 temp2 = temp.replace(']', '')
 list_bonds = [int(s) for s in temp2.split(sep=',') if s.isdigit()]
 bonds = {i: 'bonded' for i in list_bonds}
+iterations = 15000
 
-energy_average      = np.zeros((numOfAgents, 15000))
-socialness_average  = np.zeros((numOfAgents, 15000))
-oxytocin_average    = np.zeros((numOfAgents, 15000))
-cortisol_average    = np.zeros((numOfAgents, 15000))
+energy_average      = np.zeros((numOfAgents, iterations))
+socialness_average  = np.zeros((numOfAgents, iterations))
+oxytocin_average    = np.zeros((numOfAgents, iterations))
+cortisol_average    = np.zeros((numOfAgents, iterations))
 
 average_LL_from_runs = []
 bonded_average_LL_from_runs = []
@@ -163,7 +165,7 @@ for i in range(n):
             agent_ot += agent[k, 3]
             if energy <= 0:
                 life_lengths.append(k+1)
-                agents_LL_from_runs[agent_id-1].append((k+1)/15000)
+                agents_LL_from_runs[agent_id-1].append((k+1)/iterations)
                 agent_pw = agent_pw / (k+1)
                 agent_ct = agent_ct / (k+1)
                 agent_ot = agent_ot / (k+1)
@@ -172,9 +174,9 @@ for i in range(n):
                 else:
                     unbonded_LL.append(k+1)
                 break
-            elif k+1 == 15000:
+            elif k+1 == iterations:
                 life_lengths.append(k+1)
-                agents_LL_from_runs[agent_id-1].append((k+1)/15000)
+                agents_LL_from_runs[agent_id-1].append((k+1)/iterations)
                 agent_pw = agent_pw / (k+1)
                 agent_ct = agent_ct / (k+1)
                 agent_ot = agent_ot / (k+1)
@@ -228,15 +230,15 @@ for i in range(n):
         agents_aggression_from_runs[agent_id-1].append(agent_aggressions)
 
     # life length
-    average_life_length_in_percent = (sum(life_lengths) / numOfAgents) / 15000
+    average_life_length_in_percent = (sum(life_lengths) / numOfAgents) / iterations
     average_LL_from_runs.append(average_life_length_in_percent)
     bonded_average_life_length_in_percent = 0.0
     if len(list_bonds) != 0:
-        bonded_average_life_length_in_percent = (sum(bonded_LL) / len(list_bonds)) / 15000
+        bonded_average_life_length_in_percent = (sum(bonded_LL) / len(list_bonds)) / iterations
     bonded_average_LL_from_runs.append(bonded_average_life_length_in_percent)
     unbonded_average_life_length_in_percent = 0.0
     if numOfAgents - len(list_bonds) != 0:
-        unbonded_average_life_length_in_percent = (sum(unbonded_LL) / (numOfAgents - len(list_bonds))) / 15000
+        unbonded_average_life_length_in_percent = (sum(unbonded_LL) / (numOfAgents - len(list_bonds))) / iterations
     unbonded_average_LL_from_runs.append(unbonded_average_life_length_in_percent)
 
     # Physiological wellbeing
@@ -521,4 +523,33 @@ plt.title("Average Cortisol")
 plt.legend()
 
 plt.savefig(name+'/average_cortisol.pdf', bbox_inches='tight')
+plt.clf()
+
+scale = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+xi = list(range(len(scale)))
+
+plt.plot(average_grooming_by_phase, "--", c='g', marker=".", markersize=13)
+plt.xticks(xi, scale)
+plt.title("Average Grooming by Phase")
+plt.savefig(name+'/average_grooming_by_phase.pdf', bbox_inches='tight')
+plt.clf()
+
+plt.plot(average_aggression_by_phase, "--", c='r', marker=".", markersize=13)
+plt.xticks(xi, scale)
+plt.title("Average Aggression by Phase")
+plt.savefig(name+'/average_aggression_by_phase.pdf', bbox_inches='tight')
+plt.clf()
+
+plt.plot(average_intra_bond_grooming_by_phase, "--", c='g', marker=".", markersize=13)
+plt.xticks(xi, scale)
+plt.ylim(bottom=-0.01)
+plt.title("Average Intra-Bond Grooming by Phase")
+plt.savefig(name+'/average_intra_bond_grooming_by_phase.pdf', bbox_inches='tight')
+plt.clf()
+
+plt.plot(average_intra_bond_aggression_by_phase, "--", c='r', marker=".", markersize=13)
+plt.xticks(xi, scale)
+plt.ylim(bottom=-0.01)
+plt.title("Average Intra-Bond Aggression by Phase")
+plt.savefig(name+'/average_intra_bond_aggression_by_phase.pdf', bbox_inches='tight')
 plt.clf()
