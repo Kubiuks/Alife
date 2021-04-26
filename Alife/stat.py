@@ -100,8 +100,24 @@ if num_of_experiments == 2:
             print("Mann-Whitney Utest")
             _, p_value = stats.mannwhitneyu(data_list[0][0], data_list[0][1])
         else:
-            print("2-way ANOVA(t-test) on 2 experiments")
-
+            print("usually too few experiments to properly work: 2-way ANOVA(t-test) on 2 experiments")
+            res = []
+            index_1 = -1
+            index_2 = -1
+            for i, e in enumerate(differences):
+                if e:
+                    if index_1 != -1:
+                        index_2 = i
+                    else:
+                        index_1 = i
+            for i in range(len(data_list[0])):
+                tmp = [(split[i][index_1], split[i][index_2], x) for x in data_list[0][i]]
+                res.append(tmp)
+            res = [item for sublist in res for item in sublist]
+            df = pd.DataFrame(res, columns=['difference_1', 'difference_2', metrics[0]])
+            print(df)
+            model = ols(metrics[0] + '~C(difference_1) + C(difference_2) + C(difference_1):C(difference_2)', data=df).fit()
+            print(sm.stats.anova_lm(model, typ=2))
     else:
         print("MANOVA on 2 experiments")
         res = []
@@ -135,6 +151,22 @@ else:
             _, p_value = stats.kruskal(*data_list[0])
         else:
             print("2-way ANOVA on n > 2 experiments")
+            res = []
+            index_1 = -1
+            index_2 = -1
+            for i, e in enumerate(differences):
+                if e:
+                    if index_1 != -1:
+                        index_2 = i
+                    else:
+                        index_1 = i
+            for i in range(len(data_list[0])):
+                tmp = [(split[i][index_1], split[i][index_2], x) for x in data_list[0][i]]
+                res.append(tmp)
+            res = [item for sublist in res for item in sublist]
+            df = pd.DataFrame(res, columns=['difference_1', 'difference_2', metrics[0]])
+            model = ols(str(metrics[0]) + ' ~ C(difference_1) + C(difference_2) + C(difference_1):C(difference_2)', data=df).fit()
+            print(sm.stats.anova_lm(model, typ=2))
     else:
         print("MANOVA on n > 2 experiments")
         res = []
