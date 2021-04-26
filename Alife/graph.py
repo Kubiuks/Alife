@@ -64,6 +64,10 @@ average_PW_from_runs = []
 bonded_average_PW_from_runs = []
 unbonded_average_PW_from_runs = []
 
+average_MC_from_runs = []
+bonded_average_MC_from_runs = []
+unbonded_average_MC_from_runs = []
+
 grooming_from_runs = []
 aggression_from_runs = []
 grooming_from_runs_by_bonded = []
@@ -85,6 +89,7 @@ bonded_average_OT_from_runs = []
 
 agents_LL_from_runs = []
 agents_PW_from_runs = []
+agents_MC_from_runs = []
 agents_CT_from_runs = []
 agents_OT_from_runs = []
 agents_grooming_from_runs = []
@@ -92,6 +97,7 @@ agents_aggression_from_runs = []
 for j in range(numOfAgents):
     agents_LL_from_runs.append([])
     agents_PW_from_runs.append([])
+    agents_MC_from_runs.append([])
     agents_CT_from_runs.append([])
     agents_OT_from_runs.append([])
     agents_grooming_from_runs.append([])
@@ -134,6 +140,10 @@ for i in range(n):
     bonded_PWs = []
     unbonded_PWs = []
 
+    agent_MCs = []
+    bonded_MCs = []
+    unbonded_MCs = []
+
     agent_CTs = []
     bonded_CTs = []
     unbonded_CTs = []
@@ -157,16 +167,19 @@ for i in range(n):
     for agent in agents:
         agent_id = int(agent[0, 0])
         agent_pw = 0
+        agent_mc = 0
         agent_ct = 0
         agent_ot = 0
         for k, energy in enumerate(agent[:, 1]):
             agent_pw += 1 - abs(energy-agent[k, 2])  # energy - socialness at timestep k
+            agent_mc += (energy + agent[k, 2])/2
             agent_ct += agent[k, 4]
             agent_ot += agent[k, 3]
             if energy <= 0:
                 life_lengths.append(k+1)
                 agents_LL_from_runs[agent_id-1].append((k+1)/iterations)
                 agent_pw = agent_pw / (k+1)
+                agent_mc = agent_mc / (k+1)
                 agent_ct = agent_ct / (k+1)
                 agent_ot = agent_ot / (k+1)
                 if agent_id in bonds:
@@ -178,6 +191,7 @@ for i in range(n):
                 life_lengths.append(k+1)
                 agents_LL_from_runs[agent_id-1].append((k+1)/iterations)
                 agent_pw = agent_pw / (k+1)
+                agent_mc = agent_mc / (k+1)
                 agent_ct = agent_ct / (k+1)
                 agent_ot = agent_ot / (k+1)
                 if agent_id in bonds:
@@ -187,15 +201,19 @@ for i in range(n):
                 break
         agent_PWs.append(agent_pw)
         agents_PW_from_runs[agent_id-1].append(agent_pw)
+        agent_MCs.append(agent_mc)
+        agents_MC_from_runs[agent_id-1].append(agent_mc)
         agent_CTs.append(agent_ct)
         agents_CT_from_runs[agent_id-1].append(agent_ct)
         agents_OT_from_runs[agent_id-1].append(agent_ot)
         if agent_id in bonds:
             bonded_PWs.append(agent_pw)
+            bonded_MCs.append(agent_mc)
             bonded_CTs.append(agent_ct)
             bonded_OTs.append(agent_ot)
         else:
             unbonded_PWs.append(agent_pw)
+            unbonded_MCs.append(agent_mc)
             unbonded_CTs.append(agent_ct)
         agent_grooms = 0
         agent_aggressions = 0
@@ -252,6 +270,17 @@ for i in range(n):
         temp_unbonded_pw = sum(unbonded_PWs) / (numOfAgents - len(list_bonds))
     unbonded_average_PW_from_runs.append(temp_unbonded_pw)
 
+    # Mean Comfort
+    average_MC_from_runs.append(sum(agent_MCs) / numOfAgents)
+    temp_bonded_mc = 0.0
+    if len(list_bonds) != 0:
+        temp_bonded_mc = sum(bonded_MCs) / len(list_bonds)
+    bonded_average_MC_from_runs.append(temp_bonded_mc)
+    temp_unbonded_mc = 0.0
+    if numOfAgents - len(list_bonds) != 0:
+        temp_unbonded_mc = sum(unbonded_MCs) / (numOfAgents - len(list_bonds))
+    unbonded_average_MC_from_runs.append(temp_unbonded_mc)
+
     # Hormones
     average_CT_from_runs.append(sum(agent_CTs) / numOfAgents)
     temp_bonded_ct = 0.0
@@ -302,6 +331,14 @@ unbonded_average_PW_from_experiment = round((sum(unbonded_average_PW_from_runs) 
 agents_average_PW_from_experiment = []
 for j in range(numOfAgents):
     agents_average_PW_from_experiment.append(round((sum(agents_PW_from_runs[j]) / n), 2))
+
+# Mean Comfort
+average_MC_from_experiment = round((sum(average_MC_from_runs) / n), 2)
+bonded_average_MC_from_experiment = round((sum(bonded_average_MC_from_runs) / n), 2)
+unbonded_average_MC_from_experiment = round((sum(unbonded_average_MC_from_runs) / n), 2)
+agents_average_MC_from_experiment = []
+for j in range(numOfAgents):
+    agents_average_MC_from_experiment.append(round((sum(agents_MC_from_runs[j]) / n), 2))
 
 # Hormones
 average_CT_from_experiment = round((sum(average_CT_from_runs) / n), 2)
@@ -364,6 +401,22 @@ for j in range(n):
     f.write("\n{0:.2},{1:.2},{2:.2},".format(average_PW_from_runs[j], bonded_average_PW_from_runs[j], unbonded_average_PW_from_runs[j]))
     for k in range(numOfAgents):
         f.write("{0:.2}".format(agents_PW_from_runs[k][j]))
+        if k != numOfAgents-1:
+            f.write(",")
+
+f.close()
+
+# MC
+f = open(name+'/MC.csv', "w")
+f.write("All,Bonded,Unbonded,")
+for j in range(numOfAgents):
+    f.write("Agent_" + str(j+1))
+    if j != numOfAgents-1:
+        f.write(",")
+for j in range(n):
+    f.write("\n{0:.2},{1:.2},{2:.2},".format(average_MC_from_runs[j], bonded_average_MC_from_runs[j], unbonded_average_MC_from_runs[j]))
+    for k in range(numOfAgents):
+        f.write("{0:.2}".format(agents_MC_from_runs[k][j]))
         if k != numOfAgents-1:
             f.write(",")
 
@@ -452,6 +505,13 @@ f.write("Unbonded Agents Average PW: {0:.2},\n".format(unbonded_average_PW_from_
 for j in range(numOfAgents):
     f.write("Agent " + str(j+1) + " Average PW: {0:.2},\n".format(agents_average_PW_from_experiment[j]))
 
+f.write("\nMean Comfort:\n")
+f.write("All Agents Average MC: {0:.2},\n".format(average_MC_from_experiment))
+f.write("Bonded Agents Average MC: {0:.2},\n".format(bonded_average_MC_from_experiment))
+f.write("Unbonded Agents Average MC: {0:.2},\n".format(unbonded_average_MC_from_experiment))
+for j in range(numOfAgents):
+    f.write("Agent " + str(j+1) + " Average MC: {0:.2},\n".format(agents_average_MC_from_experiment[j]))
+
 f.write("\nCortisol:\n")
 f.write("All Agents Average CT: {0:.2},\n".format(average_CT_from_experiment))
 f.write("Bonded Agents Average CT: {0:.2},\n".format(bonded_average_CT_from_experiment))
@@ -525,6 +585,7 @@ plt.legend()
 plt.savefig(name+'/average_cortisol.pdf', bbox_inches='tight')
 plt.clf()
 
+# grooming/aggression
 scale = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 xi = list(range(len(scale)))
 

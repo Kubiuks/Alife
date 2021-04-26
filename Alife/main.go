@@ -117,7 +117,7 @@ func main() {
 		if visualisation {
 			a.SetReportFunc(func(a *lib.ABM) {
 				chGrid <- grid2D.Dump(func(a lib.Agent) int {
-					time.Sleep(400 * time.Nanosecond)
+					time.Sleep(300 * time.Nanosecond)
 					if a == nil {
 						return 0
 					}
