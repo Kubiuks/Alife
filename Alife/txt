@@ -1,0 +1,724 @@
+% The document class supplies options to control rendering of some standard
+% features in the result.  The goal is for uniform style, so some attention
+% to detail is *vital* with all fields.  Each field (i.e., text inside the
+% curly braces below, so the MEng text inside {MEng} for instance) should
+% take into account the following:
+%
+% - author name       should be formatted as "FirstName LastName"
+%   (not "Initial LastName" for example),
+% - supervisor name   should be formatted as "Title FirstName LastName"
+%   (where Title is "Dr." or "Prof." for example),
+% - degree programme  should be "BSc", "MEng", "MSci", "MSc" or "PhD",
+% - dissertation title should be correctly capitalised (plus you can have
+%   an optional sub-title if appropriate, or leave this field blank),
+% - dissertation type should be formatted as one of the following:
+%   * for the MEng degree programme either "enterprise" or "research" to
+%     reflect the stream,
+%   * for the MSc  degree programme "$X/Y/Z$" for a project deemed to be
+%     X%, Y% and Z% of type I, II and III.
+% - year              should be formatted as a 4-digit year of submission
+%   (so 2014 rather than the academic year, say 2013/14 say).
+
+\documentclass[ % the name of the author
+                    author={Jakub Leszczynski},
+                % the name of the supervisor
+                supervisor={Prof. Seth Bullock},
+                % the degree programme
+                    degree={BSc},
+                % the dissertation    title (which cannot be blank)
+                     title={Computationally Modelling Social Buffering Phenomenon},
+                % the dissertation subtitle (which can    be blank)
+                  subtitle={},
+                % the dissertation     type
+                    %   type={software development},
+                % the year of submission
+                      year={2021}]{dissertation}
+
+\begin{document}
+
+% =============================================================================
+
+% This macro creates the standard UoB title page by using information drawn
+% from the document class (meaning it is vital you select the correct degree
+% title and so on).
+
+\maketitle
+
+% After the title page (which is a special case in that it is not numbered)
+% comes the front matter or preliminaries; this macro signals the start of
+% such content, meaning the pages are numbered with Roman numerals.
+
+\frontmatter
+
+% This macro creates the standard UoB declaration; on the printed hard-copy,
+% this must be physically signed by the author in the space indicated.
+
+\makedecl
+
+% The following sections are part of the front matter, but are not generated
+% automatically by LaTeX; the use of \chapter* means they are not numbered.
+
+% -----------------------------------------------------------------------------
+
+\chapter*{Abstract}
+
+\noindent
+It has been observed that in highly social species there is an improved recovery from stressful experiences when a conspecific companion is present. This phenomenon is called “Social Buffering”. However, the exact mechanism of Social Buffering is not entirely understood yet. Testing all possible explanations on animals would require considerable resources, time and funding. To that end, an artificial life approach offers a more viable solution.
+
+In a recent paper, Khan et al (2020), investigated a hypothesis that social bonds, mediated by oxytocin, are one of the underlying reasons for the effects of Social Buffering. There are potential issues related to the dependency of the model on the properties of the underlying implementation which may affect the conclusions. This project will attempt to replicate the model described in the paper and compare obtained results. The methodology was to gather data from multiple runs of a simulation of a small, hierarchical society of artificial agents, each having their own internal variables and motivations, across a range of worlds with decreasing availability of food and different social bonds. Overall, collected data fits well with Khan's findings with some discrepancy between social bond conditions.
+
+
+\begin{quote}
+\noindent
+\begin{itemize}
+\item I spent $100$ hours researching biological papers underpinning          the Social Buffering phenomenon and related work in the field.
+\item I wrote a total of $3000$ lines of code, comprising a concurrent         multi-agent simulation model (in Go) and data collection with            significance testing (in Python).
+\item On top of quantitative results, I performed qualitative analysis of       the emergent behaviour of agents in my model and related it to           biological counterparts.
+\end{itemize}
+\end{quote}
+
+% -----------------------------------------------------------------------------
+
+\chapter*{Supporting Technologies}
+
+All third-party resources used throughout the project:
+
+\begin{quote}
+\noindent
+\begin{itemize}
+\item The visualtisation component of my simulatiom was implemented using shiny - an experimental Go library available at
+      \url{https://pkg.go.dev/golang.org/x/exp/shiny}.
+\item The root of my Go implementation of a multi-agent model is based on the interfaces presented in this open-source repository
+      \url{https://github.com/divan/goabm}.
+\item I used Numpy, Pandas, matplotlib, Scipy and statsmodels libraries        for data analysis and significance testing.
+\end{itemize}
+\end{quote}
+
+% -----------------------------------------------------------------------------
+
+\chapter*{Acknowledgements}
+
+\noindent
+I would like to thank my supervisor, Professor Seth Bullock, for all of his invaluable guidance and suggestions throughout the project. Many thanks to Max Brzezicki for his relentless support. I would also like to thank my friends and family for believing in me throughout my 3 years of studies.
+% Many thanks to Imran Khan for sharing his findings and ideas with me.
+
+% -----------------------------------------------------------------------------
+
+% LaTeX automatically generates a table of contents, plus associated lists
+% of figures, tables and algorithms.  The former is a compulsory part of the
+% dissertation, but if you do not require the latter they can be suppressed
+% by simply commenting out the associated macro.
+
+\tableofcontents
+% \listoffigures
+% \listoftables
+% \listofalgorithms
+% \lstlistoflistings
+
+
+% =============================================================================
+
+% After the front matter comes a number of chapters; under each chapter,
+% sections, subsections and even sub subsections are permissible.  The
+% pages in this part are numbered with Arabic numerals.  Note that:
+%
+% - A reference point can be marked using \label{XXX}, and then later
+%   referred to via \ref{XXX}; for example Chapter\ref{chap:context}.
+% - The chapters are presented here in one file; this can become hard
+%   to manage.  An alternative is to save the content in separate files
+%   the use \input{XXX} to import it, which acts like the #include
+%   directive in C.
+
+\mainmatter
+
+% -----------------------------------------------------------------------------
+
+\chapter{Introduction}
+\label{chap:context}
+
+\section{Biological background}
+
+\noindent
+Social buffering is a phenomenon in which highly social mammals have a reduced stress responses when one or more affiliative, social partners are present \cite{cohen_stress_1985, kikusui_social_2006, kiyokawa_comparative_2018, hennessy_social_2009}. It can occur in response to a stressor, in anticipation of stressful events and after such events. Social Buffering has been observed, among others, in rats, non-human primates and humans \cite{davitz_socially_1955, kiyokawa_benefits_2018, crockford_social_2008, wittig_focused_2008, heinrichs_lactation_2002}. The improvements to stress responses positively impact survivability, reproductive success and health \cite{silk_strong_2010, holt-lunstad_social_2010, archie_social_2014}. On the other hand, social animals that are forced to isolate are found to have higher mortality risk, decreased fertility and suppressed immune functioning \cite{holt-lunstad_social_2010, romero_physiological_2004}. Investigating social buffering may allow us to create new, more effective medical treatments and improve the overall quality of life. Additionally, understanding the mechanism of this phenomenon could help in grasping the evolutionary origins of social species. It might be possible that social buffering caused animals to live in groups and develop more and more social behaviour.
+
+The effects of Social Buffering are well-studied. However, the underlying neural mechanisms are not fully explained yet. It is not clear how presence and actions of bond partners suppress physiological responses to stress or invoke other regulatory systems. Recent research suggests that neuropeptide oxytocin plays a vital role in social support \cite{heinrichs_social_2003, burkett_oxytocin-dependent_2016, nelson_brain_1998, hurlemann_role_2017}. It may be influencing the strength of affective bonds with partners \cite{taylor_tend_2006} and it is linked with  down-regulating hypothalamic–pituitary–adrenal (HPA) activity, which modulates stress responses \cite{devries_social_2003, hostinar_psychobiological_2014}. There are three main ways in which oxytocin might be buffering HPA access \cite{hurlemann_role_2017}:
+
+\begin{itemize}
+\item Oxytocin is released in response to a stressor itself. Observed in rats, but no conclusive evidence in humans.
+\item The presence and pro-social actions of bond partners trigger oxytocin release. There is a variety of actions that constitute a positive social interaction. Some examples are: grooming, sharing food, huddling, vocal contact, or consolation.
+\item It may also be possible that social support provides health benefits even in the absence of stressors, with oxytocin acting like a prophylactic modulation of perception of future stressors.
+\end{itemize}
+
+\noindent
+All these hypothesised effects of oxytocin are likely to be species- and context-dependant. For example, infants require close physical contact, whereas in adults mere presence of a partner may be sufficient \cite{hostinar_psychobiological_2014}. This creates many challenges in studying Social Buffering in natural systems. Moreover, biological experiments are already expensive and time consuming. Therefore, it is advantageous to abstract biology away and focus solely on the underlying mechanism.
+
+Computational simulations are complementing theory and experiment as the third “pillar" in a wide variety of scientific disciplines \cite{heermann_computer-simulation_1990}. Artificial Life is this complement in traditional biological sciences. It aims at understanding characteristic features of life by synthesizing artificial systems, i.e., builds life in order to understand it better.
+
+\section{Investigated model}
+
+Khan et al. (2020) used artificial life approach to model Social Buffering in an artificial environment and investigated one of the hypothesised effects of oxytocin \cite{khan_modelling_2020}. Their approach was to simulate a biologically-plausible model consisting of 6 agents, each having an associated social rank. In conducted experiments, this small, hierarchical society lived in artificial worlds with different food resources. Agents could move in any direction, see in a small cone of vision in front of them, eat available food, and perform social interactions with other agents. These interactions could either be positive - grooming, or negative - aggression. To model Social Buffering, the agents had bonds with others which created a potential relationship between them.
+
+Each agent had their own set of internal variables, with energy, socialness, cortisol and oxytocin, being the most important ones as they were influencing agents' behaviour. All of them are abstractions of real, biological physiology. First, energy, simply represents the current nutrition of the agent, if it ever decreases to zero, the agent dies, which could be interpreted as death from starvation. Second, socialness, represents agent's social satisfaction. Lower values of this variable mean the agent is lonely, with little social support, which impacts his motivation to interact with others. However, agents cannot die from solitude.
+
+The last two variables are the core of this research. Cortisol in animals is usually the main stress hormone. It regulates metabolism, the inflammatory response, reproduction, and cognition \cite{oakley_biology_2013}. In emergencies such as “fight or flight", stress responses maintain homeostasis, which is beneficial for animals \cite{goldstein_adrenal_2010}. However, prolonged stress can cause a variety of disorders \cite{mcewen_central_2008}. In Khan's model, cortisol modulates the speed at which agents move, which in turn modulates the energy cost of each move. This increases the chances of finding food or potential partners. However, high cortisol levels are causing the agent to become “stressed", which changes their social behaviour to more aggressive and avoidant. The release rate of this hormone is dependant on the energy and socialness levels, as well as the perceived resources. This simulates hunger and loneliness being stressful, but presence of partners and availability of food being comforting. Additionally, the intensity of social interactions is positively correlated with cortisol. This intensity determines the release rates of other variables during social interactions.
+
+Lastly, oxytocin is controlling the strength of social bonds. This is directly imitating one of the hypothesised effects of this hormone \cite{taylor_tend_2006}. In addition, these social bonds are modulating the release rate of cortisol, which means that oxytocin is also indirectly influencing stress responses. Oxytocin was released only during grooming with other agents.
+
+Moreover, Khan et al tested two different bond conditions. One where bonds where fixed throughout the entire experiment, and second where bonds could get stronger or weaker through grooming or aggression, respectively.
+
+\section{Motivation and Aims}
+
+The results Khan et al obtained from his model support the hypothesised effects of oxytocin-mediated affective bonds on Social Buffering. In conducted experiments, bonded agents lived longer, had lower cortisol levels and performed less negative social interactions. However, there are potential issues related to the implementation of the model. Significant portions of setup and behaviour selection were re-used from previous experiments from a bigger research group \cite{canamero_modeling_1997}. This gives legitimacy to doubt the reliability of the results. Maybe they are simply a side-effect of the combined functionality implemented for other experiments and not the effect of the theorised model described in the paper.
+
+To that end, it is useful to replicate the model in a different environment, using different technology. This way, if the results from this replicated model match the results presented in the paper, it provides more evidence that the hypothesised effects of oxytocin-mediated affective bonds on Social Buffering are true. This allows scientists to be safer when they base their future models on these findings. Alternatively, if the new results are significantly different from the original, it means that possibly Khan's setup was over-tuned and not robust. Therefore, it would imply that maybe researchers should look elsewhere for the real mechanisms of Social Buffering.
+
+Furthermore, the platform used for experiments was NetLogo \cite{wilensky_netlogo_1999}, which underpins the basic functionality of the simulation. This poses two main problems. First, the code written in NetLogo is not easily reproducible across other common platforms, and secondly, in today's standards, the simulations ran in the platform are very slow \cite{sklar_netlogo_2007}. In addition, the version used (v5.3.1.) is outdated. It would be beneficial to speed up the computation and reduce days of simulation runs to hours or even minutes. This would save not only waiting times but also electricity.
+
+Taking everything into account, the factors described leave room for improvements in artificial modelling of Social Buffering. In this thesis, my goal was to address those issues. More specifically, the aims of this project could be summarised:
+
+\begin{itemize}
+
+\item develop my own, fast multi-agent simulation and replicate in it the model theorised by Khan et al.
+
+\item quantitatively analyze the generated results and compare them with Khan's findings.
+
+\item Discuss any dissimilarities in the emergent behaviour of agents and interpret them qualitatively.
+
+\end{itemize}
+
+\section{Roadmap}
+
+In Chapter 2, I describe related research in the field of Artificial Life. After that, I explain my implementation of the model and experiment setup in Chapter 3. Next, I present my results in Chapter 4. In Chapter 5, I evaluate my model and compare my findings with Khan's. Lastly, I conclude the thesis, and lay out some possible future work that could be done in the field in Chapter 6.
+
+
+% -----------------------------------------------------------------------------
+
+\chapter{Related Research}
+\label{chap:technical}
+
+\section{Model Foundation}
+
+\noindent
+Homeostatic control mechanisms are allowing living organisms to adjust their internal environments to maintain a stable, constant equilibrium \cite{ashby_design_2013}. However, the equilibrium point might change over time and is depending on diverse, external circumstances. To account for this physiology of change and anticipation of future events, the idea of allostasis has been created \cite{schulkin_allostasis_2004}. Allostasis, meaning “maintaining stability through change”, is a process of adaptation to anticipated needs in a changing, contextual environment. These changes to homeostatic mechanisms are hypothesized to be mediated by hormones \cite{sterling_what_2020}. Khan et al focused on the social aspect of allostasis \cite{schulkin_social_2011}, which integrates social environment in the adaptation of the agent's internal environment. More specifically, the paper experimented with integrating Social Buffering into a model of social allostasis for embodied agents.
+
+In the current literature, modelling allostasis-based artificial agents has been sparse. Some researches studied agent's behaviour modulation through allostatic control \cite{vouloutsi_modulating_2013, sanchez-fibla_allostatic_2010}. However, Khan et al is the first research into a social allostasis model in the field of artificial life.
+
+On the other hand, there have been numerous studies around modelling hormonal mechanisms in autonomous agents. Cortisol and oxytocin, which are simulated in this model, are only examples of investigated hormones in the field. Studies looked at the role of hormones on the perception of external environment \cite{avila-garcia_hormonal_2005}, or influence of hormonal feedback on agent's behaviour \cite{avila-garcia_using_2004}. Models inspired by this hormonal regulation have reported adaptive benefits for the agents \cite{schmickl_modelling_2011, schmickl_modelling_nodate}.
+
+In the model of interest, the simulated society was hierarchical. This approach is relevant as such dominance hierarchies are existing in many animal species. Taking inspiration from social hierarchies in the real-world, in Khan's model, higher dominance rank grants an agent easier access to food resources and also makes him more desirable to be selected by other agents as a grooming target. It is based on the research of Hemelrijk et al and her widely published agent-based model - DomWorld \cite{hemelrijk_towards_2000}, which she used to investigate dominance interactions and social structure in a variety of species, primarily primates. In the study, Hemelrijk et al observed how an egalitarian society (with a weakly developed dominance hierarchy) can change to a despotic one in which the hierarchy is steep, merely through the means of increasing the intensity of aggression between agents. These hierarchies are self-organised, arisen from the effects of self-reinforcement and spatial structure. Overall, incorporating a dominance ranking into a multi-agent model makes it more biologically-plausible.
+
+\section{Social Adaptation and Emotions}
+
+Improvements to autonomous, artificial agents are becoming more crucial with the increasing prevalence of such agents in the modern world. The success of these agents is dependant on their ability to make their own decisions and choose appropriate behaviours across not only physical but also social changing contexts. Modelling Social Buffering is a novel idea in Artificial Life. Nevertheless, developing artificial, affective agents which can adapt to the social environment is an ongoing area of research.
+
+Bedia et al (2019) looked at adaptation of homeostatic models through social interactions \cite{bedia_towards_nodate}. In the study, a model has been implemented to investigate how social habits emerge in organismically-inspired agents. The model consisted of agents controlled by a dynamical neural network, incorporating mechanisms of homeostatic synaptic plasticity evolved to solve a task in a social scenario. In the setup, the agents were grouped in pairs and their goal was to remain close to randomly appearing sources of light. The agents had sensors for light and separate sensors for other agents. After each iteration of light exposures, a genetic algorithm was used to evolve two different populations of agents, one with homeostatically regulated synaptic plasticity and the other without it. To test how social interactions influence the emergent habit, Bedia et al conducted an experiment in which one of the agents from a pair was “blinded", although they could still sense other agents. This caused the individual habit of remaining close to light source to be not able to express itself, which left only the capacity for social interactions present. The results showed that agents with homeostatic stabilization outperformed agents without it and were able to maintain to some extent the performance of the task. This indicates that adaptation to social context is important to maintain a collective pattern of behaviour.
+
+In another study, Youssef et al (2015) developed a socially adaptive virtual agent \cite{brinkman_towards_2015}. The motivation of the study was that affective state of others should influence the behaviour of agents in order for it to be credible and allow to build some sort of a relationship. The agent was able to continuously choose appropriate behaviours based on the social constructs which were changing depending on the perceived behaviour of its interlocutor. In the experiment, 83 participants were asked to engage in a short interaction with 3 different versions of virtual agents and fill a questionnaire to rank them across different metrics. The socially adaptive agent outperformed both other versions. The adaptive emotion and attitude expressions improved naturalness, credibility, coherence, expressiveness and user’s consideration during the interaction. The study showed that consideration of social context is key in a successful human-computer interaction.
+
+The process through which individuals learn from others rather than through own experience is referred to as social learning \cite{heyes_social_1996}. The role of social interactions in this ability to adapt behaviour to enhance fitness is also being investigated in artificial models. Yonenoh et al (2019) studied how social environment influences the evolution of linguistic communication in artificial environment \cite{yonenoh_effects_2019}. Using a genetic algorithm, a population of agents has been evolved. At each learning step agents were randomly paired with others and had a probability to imitate the traits of the best individual or learn randomly. The results of the simulation suggest that this combination of individual and social learning can cooperate and contribute to the evolution of the agent model.
+
+Research into the mechanisms of social adaptation has also considered for example: learning to imitate other agents in the society \cite{doering_modeling_2019}, adaptation to inferred intention of others \cite{gorur_toward_2017}, or evolution dynamics of artificial agents \cite{fernandez_perez_learning_2017}. All these studies are in some way inspired by biological systems.
+
+Simulating emotions is closely related to social adaptation in embodied agents. Emotions play an important role in decision making by influencing motivation and action selection \cite{moerland_emotion_2017}. Why do emotions have such an influence? Why are we not purely based on evidence and logic? Could artificial agents have emotions? These are the kind of questions that scientists have to face. In order to answer them, researchers started thinking of the basic mechanisms of emotion and many, like Cañamero & Gaussier et al (2005), argued that simulating emotions may be essential for solving design problems that arise in building complex artificial systems.
+
+Hieida et al (2018) set out to model emotion-based decision making in artificial agents \cite{hieida_deep_2018}. In the study, the author proposes a computational model of an emotional system based on recent neurological and psychological findings. The model has three layers. The first layer is an appraisal module. It represents the quick bodily reactions to external stimuli and internal state of the body. Therefore sets emotions dependant on the physical body. The second layer is analyzing and regulating these reactions by accessing memories such that stimuli can be evaluated through experiences. To that end, it reduces overreaction at the cost of processing time. Lastly, the third layer is a decision making module. It uses stimuli and its own prediction to decide on appropriate actions. The decision making policy is learned by reinforcement learning, with the reward being homeostatically regulated affect. In an experiment, an artificial agent using the proposed model was able to learn a selective smile and how to differentiate between a small set of emotions. Further research can lead to even more advanced models of artificial emotions.
+
+
+% -----------------------------------------------------------------------------
+
+\chapter{Methodology}
+\label{chap:execution}
+
+\section{Overview}
+
+One of the reason why platforms like NetLogo are often used in research are their multi-agent programmable modelling environments. This means that the researchers can build their models in that provided environment without having to understand how it works. In this project, the aim was to stay independent from existing platforms to maximize the reliability of the results. Consequently, before I was able to model Social Buffering, I needed to implement such an environment myself. Additionally, after being able to produce data, I needed to develop procedures to systematically analyze and perform statistical significance testing over that data. In this Chapter, I will provide a summary of my implementation of a multi-agent system, the replication of Khan's model in that system, and of a data analysis module.
+
+I have used Github for version-control. Furthermore, my programming language of choice for the simulation was Go, also known as Golang. There are three main reasons why I used it in my implementation:
+
+\begin{itemize}
+
+\item First of all, as discussed in Chapter \ref{chap:context}, an important metric of the system is simulation speed. Golang is a very efficient language and fulfills this need for performance. Go binaries are almost as fast as C binaries in the majority of cases.
+
+\item Secondly, instead of executing all the calculations one by one, I decided to perform them in parallel, which would further speedup the compute. Therefore, Go's native support for concurrency was a significant advantage.
+
+\item Lastly, I wanted my code to be easy to use and adaptable to future research. Golang meets this requirement with its clean syntax and accessibility to newcomers.
+
+\end{itemize}
+
+\noindent
+One of the main goals of the project can be summarized as “collect data from a model". Following this logic, I decided to split the multi-agent system into two parts. The first part is responsible for running the simulation and following the logic of the model. It consists of Engine, World and Agents modules. The purpose of the second part is to present (Visualisation) or save (Writer) the data generated by the first part. It can be considered as dumping the data from the model without any interactions other than data transfers. This simplified the design by separating data collection from data generation. A system diagram can been seen in figure \ref{diagram}. Some of the basic ideas for module interfaces are based on the concepts presented on a Golang Meetup in Kyiv, May 2018 \cite{divan}.
+
+\newpage
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{images/diagram}
+\caption{System diagram. The engine starts and governs the simulation. Agents interact with each other and with the World. Visualisation and Writer capture the data produced by the World and Agents.}
+\label{diagram}
+\end{figure}
+
+\section{Simulation}
+
+\subsection{Engine}
+
+This module is the overseer of the simulation. It is responsible for iterating through the time steps and synchronizing the concurrent tasks. It holds information on what are the world and agents and starts their executions. At each time step, Engine updates the world and spawns one goroutine for each agent. A goroutine can be described as a light-weight thread, they are functions that run concurrently with the rest of the program and their creation cost is extremely cheap compared to OS threads. The Engine waits until all agents finish their calculations and then calls a report function. In my case, the report functions simply tells the World module to dump the current state of the world to the Visualisation module.
+
+\begin{algorithm}[h]
+
+\For{$i=0$ {\bf upto} $n$}{
+  world.Tick()\;
+  \For{$j=0$ {\bf upto} $m$}{
+    go $agent_j$.Run()\
+  }
+  wait()\;
+  report()
+}
+\caption{Engine main algorithm.}
+\label{alg}
+\end{algorithm}
+
+\subsection{Agents}
+\label{agentsection}
+
+An artificial agent is a computational system which is situated within and is a part of an environment. An agent can sense that environment and act on it to realize a set of goals or tasks. The information flow of an agent can be depicted as seen in figure \ref{agentflow}.
+
+\newpage
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{images/agentflow}
+\caption{The triadic informational structure of an agent \cite{burgin_systematic_2009}.}
+\label{agentflow}
+\end{figure}
+
+\noindent
+In this section, I describe only the functionality of agents in my system, i.e. the receptors and effectors, needed to replicate Khan's et al experiments. The agent behaviour model, i.e. the processor, is presented in section \ref{model}. With that goal, the question is what should the agents in this simulation sense, and what should they be able to do.
+
+First of all, the agents are required to perceive the world they live in. I satisfied this need by implementing a vision system. The agents do not hold information about the contents of the world. Therefore, at each time step, the agents ask the World module to tell them what aspects of the environment are present in a cone of vision in the direction they are facing. Although the parameters of agent's sight can be changed between experiments, their default values are 20 units in length and 80(+40/-40) degrees in angle. The agents are also able to calculate precise distances between them and the resources they perceive. Moreover, the agents need to be aware of their current state, their dominance rank, and existing bonds in the society. This information is essential in decision-making. Therefore, each agent can access all of their internal variables and creates a list of their bond partners.
+
+At each time step, after processing external and internal cues, each agent selects an action they want to perform. There are four possible actions: eat, move, groom and aggression. Eating can be performed only when next to a food resource. This action is temporal, the agent stops and takes a “bite" every five time steps. Once the agent picks a different action, it first moves away from the food resource before performing it. Eating increases agent's energy and decreases the food resource by the same amount. The memory in the system is shared so two or more agents simultaneously eating the same resource could produce undesirable results, e.g. only a single food depletion instead of two. Therefore, to prevent such race conditions I used mutex locks to protect critical sections of the code. Additionally, all variables are always kept within their limits. Next, move action simply changes agents' positions in the environment. When an agent chooses this action, it picks a new direction (0-360), calculates the step size and calls the World module to update its position in the environment. Lastly, groom and aggression are interactions with another, physically close agent. Groom action can be considered positive and aggression negative. They modulate initiator and recipient agents' internal variables and are always followed by a move action. Lastly, when agent's energy reaches 0, the agent dies, which deletes them from the environment.
+
+Foods can also be considered as simple, static agents. However, I will not call them agents to avoid confusion. Their only sense is detecting which agent around them, if any, is their owner (agent with highest dominance rank) and their only action is increasing their resources (in range from 0 to 4) by a fixed value (0.001) at each time step. Similarly to agents, when a food resource is fully depleted, it gets deleted from the world and does not regrow.
+
+\subsection{World}
+\label{worldSection}
+
+World is an environment which the artificial agents inhabit. The complexity and diversity of agents is influenced by the complexity of the environment in which they thrive \cite{simon_sciences_2019}. For that reason, modelling the world is inseparable from modelling any agent system.
+
+In this project, the world is a 2-dimensional, 100x100 units continuous space. The world does not wrap around. Instead, the boundaries are an impermeable wall which agents can see when they get close. Agents in that world are mathematical points with no volume. Additionally, experimental conditions include the type of environment the agents live in. There are three different world conditions related to increasing difficulty (i.e. decreasing food availability). All conditions start with 4 food resources located near each corner of the world. In a Static world, those resources remain fixed throughout the experiment. Seasonal world describes a dynamic environment in which, after a buffer period of 2000 steps, the number of food resources start gradually changing every 1000 steps in a repeating pattern 4 \textrightarrow{} 3 \textrightarrow{} 2 \textrightarrow{} 1 \textrightarrow{} 2 \textrightarrow{} 3 \textrightarrow{} 4 . Finally, an Extreme world is also dynamic with the same buffer period. However, the changes in food resources are sharper, occurring in a repeating pattern 4 \textrightarrow{} 1 \textrightarrow{} 4. \newpage
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{images/worlds}
+\caption{Screenshots of the visualisation of the world. Arrows describe the dynamics of different world conditions, described in \ref{worldSection}. Green arrows - Seasonal changes, red arrows - Extreme changes. Yellow squares near the corners are food resources, other coloured squares are agents. White squares indicate two or more agents are in the same cell.}
+\label{worlds}
+\end{figure}
+
+\section{Data Capture}
+
+\subsection{Visualisation}
+
+The purpose of visualisation is to allow for a qualitative analysis of the emergent behaviour, by observing the movements of agents in the world. Implementation of this module revealed a downside of Golang, i.e. there is no official Go GUI library. To that end, I used an experimental Go library called Shiny. My motivation was that Shiny does not depend on any native libraries or system dependencies. Therefore, I was able to keep my program purely in Go and immediately use the library.
+
+The UI is a goroutine which listens on a channel and reacts to events received through it. Although the world is continuous, it is visualised as a 100x100 grid. The World module holds a list of all the cells in the grid, and, when asked by the Engine, sends it through a channel to the UI, which then updates the screen. When an agent's position is within one of the cells, the UI colours this cell accordingly.
+
+\subsection{Writer}
+
+Writer module is a goroutine responsible for creating quantitative data. At each time step, all agents send a message to the Writer through a channel. This communication captures the state of agents' internal variables and social interactions that happened in that iteration. The messages are sent asynchronously, so the Writer first sorts them and then writes them to a file. After the experiment is finished, this file is saved and available for analysis.
+
+\section{Replicated Agent Model}
+\label{model}
+
+After having the required functionality, I replicated the agents' decision-making and physiological model described in Khan et al's study. This is the pivotal aspect of this thesis. However, I found the logic described in the paper to be counter-intuitive and overly complicated. For example, a presented Action Selection Architecture does not actually select any action, instead it only picks the behaviour an agent adapts. Therefore, I decided to simplify to some extent the design in my implementation, at the same time maintaining the investigated model of Social Buffering. In addition, many constant values and their impacts are not thoroughly explained. These issues were not explained even after reviewing legacy NetLogo code. This forced me to investigate and choose most of the constants myself. All constants mentioned in this section are presented in table \ref{appx:example}.
+
+\subsection{Agent Motivation Selection}
+
+Agents have two physiological needs, Energy and Socialness, and their goal is to maintain stability of their internal environment by regulating those two competing needs. Agents select actions to minimise the errors of these internal variables. First of the two needs, Energy, is an abstraction of hunger, and the second, Socialness, represents psychological need for social interactions. As mentioned previously, agents “die" when their Energy falls to 0, whereas Socialness is non-critical. Both variables $\bm{v}$ remain in the range 0 - 1, with 1 being the ideal value, and experience a small decay at the end of each time step $\bm{t}$. Loss value $\bm{\gamma}$ is dynamic for Energy, but static for Socialness:
+\begin{equation} \label{eq:1}
+v_{t+1} = v_t - \gamma_v
+\end{equation}
+\noindent
+Action selection happens at each time step and starts by calculating the errors of both internal needs. The errors $\bm{e}$ are the differences between ideal and current values of each variable.
+\begin{equation}
+ e_v = 1 - v
+\end{equation}
+\noindent
+Next, agents calculate their both motivations: EatMotivation ($\bm{m_{eat}}$) and SocialMotivation ($\bm{m_{social}}$). A motivation value signifies how urgent is correcting the respective internal variable in this time step. In order to calculate this, agents combine their errors with the perceived external stimuli $\bm{s}$. This value can either be 1 or 2. EatMotivation or SocialMotivation are doubled when the agent sees any number of other agents or food resources, respectively. The winning motivation $\bm{M}$ is the one with higher value.
+\begin{align}
+&m_v = e_v\times s_v \\
+&M = max(m_{eat}, m_{social}) \label{eq:M}
+\end{align}
+\noindent
+Afterwards, agents choose actions that either directly improve the internal variable responsible for the winning motivation, or actions that increase their chances of finding relevant and available resources. As described in \ref{agentsection}, agents have only four functional actions: eat, move, groom and aggression. However, each has its own properties, e.g. direction in move action or recipient agent in groom action. In the model, there are several factors that influence both the choice of action and its properties. I first explain all those factors in the following subsections and only then explain their role in the final action selection.
+
+\subsection{Dominance Ranking}
+
+The society that agents live in is hierarchical. Each agent has a unique dominance rank, which is an integer in a range from 1 to the number of agents in the society (default is 6 agents). This rank determines accessibility of food resources, impacts social interactions and influences agent movements. This is where the explanation in Khan's paper gets a little confusing. Higher rank is portrayed as a factor which increases the chances of being chosen as a grooming partner by other agents. However, if we were to follow the described calculations precisely, agents would have a preference for lower ranked agents. Therefore, in my implementation I included two different formulas for calculating the difference in rank. When used appropriately, they fit the desired goal of the dominance ranking system. D - rank difference, R - rank, N - number of agents in the society, A - agent calculating the rank difference, B - agent perceived by A.
+\begin{align}
+ &D = (R_A - R_B)/(N-1)\\
+ &D_{norm} = -1\times D
+\end{align}
+\noindent
+Both D and \(D_{norm}\) are values between -1 and 1, in 0.2 increments (when \(N = 6\)). A negative value of D indicates that the perceived agent is higher ranked, and it is the opposite in the case of \(D_{norm}\). Depending on the context, these equations can later be used in order to calculate values (AgentVals) for perceived agents. Those values also take into account, if present, the strength of the affective bond between agents, called Dyadic Strength Index (DSI) and the current level of oxytocin (OT) in calculating agent.
+\begin{align}
+ AgentVal &= D + (DSI_{AB}\times OT_A) \label{eq:2}\\
+ AgentVal_{norm} &= D_{norm} + (DSI_{AB}\times OT_A) \label{eq:3}
+\end{align}
+\noindent
+The purpose of these values is to determine agent's relative position in the society. In turn, agent returning highest \(AgentVal_{norm}\) is the preferred grooming partner. Additionally, agents cannot approach food resources whose owner returns \(AgentVal < 0\) and they try to avoid such agents while wandering through the world.
+
+\subsection{Oxytocin}
+
+Oxytocin (OT) is a hormone in agent's artificial physiology. Its purpose is solely to modulate the impact of social bonds on agent behaviour. This is achieved by including OT in AgentVals calculations shown \ref{eq:2} and \ref{eq:3}. Oxytocin stays in range 0 - 1 and experiences same decay as in equation \ref{eq:1}. The hormone is released only during socio-positive interactions between agents (groom actions), in both the initiator and recipient agents. In my model, the amount of oxytocin released is a function of its current value. The less oxytocin the initiator agent has, the bigger amount of oxytocin is released.
+\begin{equation} \label{eq:oxy}
+ OT_{t+1} = OT_t + (1 - OT_t)\times c
+\end{equation}
+\noindent
+
+\subsection{Cortisol}
+
+Cortisol (CT) is the second hormone included in the model and it also stays in range 0 - 1, but the ideal value is 0. First of all, there is a threshold cortisol value. When agents exceed it, their adaptive state changes to “stressed", which intensifies cortisol's influence on agent's action selection process. This stress hormone modulates other internal variables. First, cortisol alters the agents' movement speed $\bm{z}$. The default speed value is 0.5 units per step. This value is modulated by cortisol and can speed the agent up to 1.75 units per step.
+\begin{equation} \label{eq:speed}
+   z =
+    \begin{cases}
+      0.5 + c_1\times CT & \text{if stressed}\\
+      0.5 + c_2\times CT & \text{otherwise}\\
+    \end{cases}
+\end{equation}
+\noindent
+The dynamic loss value of energy (\ref{eq:1}) is dependant on this speed.
+\begin{equation} \label{eq:energy}
+ \gamma_{energy} = z\times c
+\end{equation}
+\noindent
+Furthermore, agents try to avoid agents for which \(AgentVal < 0\) by changing their direction $\bm{d}$ of movement. Stressed agents are further trying to avoid agents for which \(AgentVal < 1\). First, agent randomly chooses whether it will turn left or right. Next, the magnitude of this change is influenced by cortisol.
+\begin{equation} \label{eq:dir}
+   d_{t+1} =
+    \begin{cases}
+      d_t \pm 90\times c_1\times CT_t & \text{if \(AgentVal < 1\) and stressed}\\
+      d_t \pm 90\times c_2\times CT_t & \text{else if \(AgentVal < 0\)}\\
+    \end{cases}
+\end{equation}
+\noindent
+Moreover, cortisol modulates the “intensity" of social interactions. Actions of stressed agents are more impactful on others than actions of agents with lower cortisol levels.
+\begin{equation} \label{eq:tac}
+TactileIntensity = \lceil M\times CT\times c \rceil
+\end{equation}
+Socialness is increased through social contact, both negative and positive, in the initiator agent.
+\begin{equation} \label{eq:sc}
+Socialness_{t+1} = Socialness_t + TactileIntensity_t\times c
+\end{equation}
+\noindent
+Additionally, during a groom action, cortisol level of recipient agent (B) is reduced as a function of \(TactileIntensity\) of initiator agent (A).
+\begin{equation} \label{eq:ctg}
+CT_B = CT_B - TactileIntensity_A\times c
+\end{equation}
+\noindent
+On the other hand, aggression increases cortisol in recipient, but reduces it in initiator.
+\begin{equation} \label{eq:cta}
+\begin{aligned}
+CT_B = CT_B + TactileIntensity_A\times c_1\\
+CT_A = CT_A - TactileIntensity_A\times c_2
+\end{aligned}
+\end{equation}
+\noindent
+Finally, cortisol is updated at each time step as a function of internal and external stimuli. The hormone can get depleted or increased depending on the balance of this stimuli. Errors $\bm{e}$ of Energy and Socialness values $\bm{V}$ are stressful, whereas seeing available food resources $\bm{F}$ or approachable agents $\bm{A}$ is comforting.
+\begin{align}
+   CT_{t+1} &=
+    \begin{cases}
+      CT_t + CTRelease/2& \text{if \(CTRelease < 0\)}\\
+      CT_t + CTRelease  & \text{otherwise}\\
+    \end{cases} \\
+CTRelease &= (\sum_{v\in V} e_v - F - A)\times c \label{eq:ctr}
+\end{align}
+\noindent
+The default value of $\bm{F}$ is 0. When a perceived food resource is considered available, which is either when its free or when its owner's \(AgentVal \geqslant 0\), then it increases $\bm{F}$ by 1. On the other hand, $\bm{A}$ is calculated by choosing the highest value of \(D_{norm}\) from the perceived agents. In addition, if a bond partner is present, $\bm{A}$ is further increased by the strength of their bond modulated by the level of oxytocin in agent's physiology.
+\begin{equation}
+   A =
+    \begin{cases}
+      1 - MaxD_{norm} + DSI\times OT & \text{if a bond partner is present}\\
+      1 - MaxD_{norm}        & \text{otherwise}\\
+    \end{cases}
+\end{equation}
+\noindent
+The fact that oxytocin is included in this calculation is a crucial point of Khan's model of Social Buffering. By modulating the evaluation of available agents, oxytocin can indirectly reduce cortisol release rate, and therefore improves stress responses when a bond partner is present.
+
+\subsection{Dyadic Strength Index}
+
+This value, DSI for short, represents the strength of the bonds existing in the society. DSI stays in range 0 - 2, where a minimal value of 0 indicates that the bond is in a bad condition. Experimental conditions also include the type of affective bonds (DSImode). There are two of them, Fixed and Variable. Fixed type is when the bonds are constant and the strength of the bonds is always maximal (DSI = 2). On the other hand, Variable bonds start with a maximal value, but change in strength depending on the behaviour of agents. Negative and positive social interactions (aggression and grooming) between bond partners weaken and strengthen their connection, respectively. These changes vary in magnitude as they are modulated by TactileIntensity.
+\begin{equation} \label{eq:dsic}
+  DSI_{AB} =
+    \begin{cases}
+      DSI_{AB} + TactileIntensity\times c_1 & \text{if Groom}\\
+      DSI_{AB} - TactileIntensity\times c_2 & \text{if Aggression}\\
+    \end{cases}
+\end{equation}
+\noindent
+Additionally, DSI experiences a small decay at each time step.
+\begin{equation} \label{eq:dsid}
+ DSI_{t+1} = DSI_t\times c
+\end{equation}
+\noindent
+
+\subsection{Action selection}
+
+At each time step, living agents perform actions depending on the internal and external stimuli, and social context. In Khan et al's paper, this decision-making process was ambiguous. Therefore, I tried to formalize it and implemented a decision tree that each agent follows, which can be seen in figure \ref{decision}. Some explanation of the flow in the tree:
+
+\begin{itemize}
+    \item Agents cannot approach food resources whose owner's \(AgentVal > 0\). However, once they start eating, they can keep eating until their motivation changes, and when that happens, agents first have to move away from the food resource in order to free it for others.
+    \item Whenever agents perceive available resources they want, they are able to move straight towards them.
+    \item Agents can perceive the walls around the world the live in, and turn away from them in order to increase their chances of finding resources.
+    \item When agents are looking for a social interaction, they try to approach their chosen target. However, they can be considered “intimidated" depending on their relative difference in dominance ranking, which might change their direction enough to find other targets or even completely turn them away.
+    \item Stressed agents want to perform aggression but are unable to be aggressive towards higher ranked agents and therefore are forced to groom with them instead.
+    \item After each social interaction, agents immediately perform another move action. This prevents them from stopping next to each other for long periods of time.
+    \item The default walking pattern, i.e. movements when agents cannot see any aspect of the environment, is called “random wandering". A step in this pattern consists of modulating direction by a small, random value from range (-20°,20°). This prevents agents from sharp turns and irregular exploration.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{images/decision_tree.pdf}
+\caption{Decision tree representing agent action selection, which occurs at each time step. Green circle is the starting point, and represents equation \ref{eq:M}. Grey rectangles are yes/no decision nodes, blue rectangles describe agent adjustments and orange hexagons are actions.}
+\label{decision}
+\end{figure}
+
+\section{Data Analysis}
+
+At each time step of the simulation, the Writer module records all social interactions that have occurred as well as current levels of energy, socialness, oxytocin and cortisol in agents' physiology. After an experiment run is finished, all the data is saved in a CSV file. This data is then analysed by separate Python programs. My choice of programming language for this purpose was Python, because of its variety of data science, open-source libraries.
+
+First and foremost, all experiments are repeated multiple times to provide more reliable evidence. These results are accumulated and averaged out. The metrics are calculated for each agent, only bonded agents, only unbonded agents and all agents. The metrics include: life lengths, hormone levels, satisfaction and homogeneity of internal needs, and amount of grooming/aggression performed (both intra-bond and extra-bond). These results can also be split by phases of the environment. Averages from each run are also saved to new files. Additionally, graphs are produced for a range of variables. This whole process is automated.
+
+Moreover, to further improve reliability, I implemented a statistical significance testing module. It takes three input arguments:
+
+\begin{itemize}
+    \item Metrics to be tested (max 2), e.g. life length.
+    \item The target, e.g. bonded agents.
+    \item Names of the experiments of interest.
+\end{itemize}
+\noindent
+Next, this python program automatically calculates the number of differences in experimental conditions, e.g. different world dynamics or different combination of social bonds, and chooses which statistical test to perform. Importantly, the produced data tended not to be normally distributed, so I used non-parametric tests where possible.
+\begin{itemize}
+    \item 2 experiments, 1 metric, 1 difference - Mann-Whitney U test
+    \item \(>\) 2 experiments, 1 metric, 1 difference - Kruskal-Wallis test
+    \item 2 metrics - MANOVA
+    \item \(>\) 1 difference - 2-way ANOVA
+\end{itemize}
+
+\section{Experimental workflow}
+
+Having all required modules, I streamlined the process of experimentation by writing some simple scripts. In order to test the model under some conditions, the user only needs to provide the desired experimental conditions on the command line and the script runs both the simulation and data analysis. Additionally, there are preset scripts which run multiple different experiments and analyze produced data in one command. The user is only left with manually running statistical significance testing. The set of experimental conditions available through the command line is:
+
+\begin{itemize}
+    \item Number of runs of the experiment.
+    \item World dynamics - {Static, Seasonal, Extreme}.
+    \item Number of agents in the society.
+    \item Subset of agents to be bonded.
+    \item Type of the bonds (DSImode) - {Fixed, Variable}.
+\end{itemize}
+\noindent
+In order to experiment with other constants or conditions, e.g. different field of vision, the user needs to change the code. Lastly, visualisation is turned off by default to speed up the simulation.
+
+% -----------------------------------------------------------------------------
+
+\chapter{Results}
+\label{chap:evaluation}
+
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{c@{\hskip 0.2in} c@{\hskip 0.2in} c@{\hskip 0.2in} c@{\hskip 0.2in} c@{\hskip 0.2in}}
+\hline
+World Condition & Bond & Control & Fixed & Variable \\
+\hline
+Static & A & 88\% & 99\% & 98\% \\
+Static & B & 88\% & 96\% & 94\% \\
+Static & C & 88\% & 99\% & 98\% \\
+\hline
+Seasonal & A & 42\% & 50\% & 48\% \\
+Seasonal & B & 42\% & 51\% & 49\% \\
+Seasonal & C & 42\% & 51\% & 49\% \\
+\hline
+Extreme & A & 39\% & 44\% & 42\% \\
+Extreme & B & 39\% & 44\% & 43\% \\
+Extreme & C & 39\% & 42\% & 45\% \\
+\hline
+\end{tabular}
+\caption{Average Life Lengths in different conditions.}
+\label{ll}
+\end{table}
+
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c@{\hskip 0.2in} c@{\hskip 0.2in} | c@{\hskip 0.1in} | c@{\hskip 0.1in} c@{\hskip 0.1in} c@{\hskip 0.1in} | c@{\hskip 0.1in} c@{\hskip 0.1in} c@{\hskip 0.1in} | }
+\hline
+ &  & Control & \multicolumn{3}{c|}{Fixed} & \multicolumn{3}{c|}{Variable}\Tstrut  \\
+\cline{3-9}
+World Condition & Bond &
+\begin{tabular}{@{}c@{}}CT \\ (All)\end{tabular} & OT &
+\begin{tabular}{@{}c@{}}CT \\ (B)\end{tabular} &
+\begin{tabular}{@{}c@{}}CT \\ (UB)\end{tabular} & OT &
+\begin{tabular}{@{}c@{}}CT \\ (B)\end{tabular} &
+\begin{tabular}{@{}c@{}}CT \\ (UB)\end{tabular}\Tstrut \\
+\hline
+Static & A & 0.37 & 0.89 & 0.26 & 0.33 & 0.87 & 0.27 & 0.34\Tstrut  \\
+Static & B & 0.37 & 0.90 & 0.21 & 0.33 & 0.89 & 0.20 & 0.32\Tstrut  \\
+Static & C & 0.37 & 0.89 & 0.26 & 0.15 & 0.89 & 0.25 & 0.17\Tstrut  \\
+\hline
+Seasonal & A & 0.40 & 0.81 & 0.42 & 0.39 & 0.79 & 0.40 & 0.38\Tstrut  \\
+Seasonal & B & 0.40 & 0.84 & 0.38 & 0.42 & 0.83 & 0.36 & 0.42\Tstrut  \\
+Seasonal & C & 0.40 & 0.86 & 0.38 & 0.39 & 0.85 & 0.36 & 0.38\Tstrut  \\
+\hline
+Extreme & A & 0.42 & 0.79 & 0.44 & 0.41 & 0.78 & 0.42 & 0.41\Tstrut  \\
+Extreme & B & 0.42 & 0.84 & 0.41 & 0.41 & 0.83 & 0.40 & 0.41\Tstrut  \\
+Extreme & C & 0.42 & 0.86 & 0.41 & 0.41 & 0.83 & 0.39 & 0.38\Tstrut  \\
+
+\hline
+\end{tabular}
+\caption{Mean hormone levels in different conditions.}
+\label{hormones}
+\end{table}
+
+% {\bf A topic-specific chapter, of roughly $15$ pages}
+% \vspace{1cm}
+
+% \noindent
+% This chapter is intended to evaluate what you did.  The content is highly
+% topic-specific, but for many projects will have flavours of the following:
+
+% \begin{enumerate}
+% \item functional  testing, including analysis and explanation of failure
+%       cases,
+% \item behavioural testing, often including analysis of any results that
+%       draw some form of conclusion wrt. the aims and objectives,
+%       and
+% \item evaluation of options and decisions within the project, and/or a
+%       comparison with alternatives.
+% \end{enumerate}
+
+% \noindent
+% This chapter often acts to differentiate project quality: even if the work
+% completed is of a high technical quality, critical yet objective evaluation
+% and comparison of the outcomes is crucial.  In essence, the reader wants to
+% learn something, so the worst examples amount to simple statements of fact
+% (e.g., ``graph X shows the result is Y''); the best examples are analytical
+% and exploratory (e.g., ``graph X shows the result is Y, which means Z; this
+% contradicts [1], which may be because I use a different assumption'').  As
+% such, both positive {\em and} negative outcomes are valid {\em if} presented
+% in a suitable manner.
+
+% -----------------------------------------------------------------------------
+
+\chapter{Analysis}
+\label{chap:conclusion}
+
+% {\bf A compulsory chapter,     of roughly $5$ pages}
+% \vspace{1cm}
+
+% \noindent
+% The concluding chapter of a dissertation is often underutilised because it
+% is too often left too close to the deadline: it is important to allocation
+% enough attention.  Ideally, the chapter will consist of three parts:
+
+% \begin{enumerate}
+% \item (Re)summarise the main contributions and achievements, in essence
+%       summing up the content.
+% \item Clearly state the current project status (e.g., ``X is working, Y
+%       is not'') and evaluate what has been achieved with respect to the
+%       initial aims and objectives (e.g., ``I completed aim X outlined
+%       previously, the evidence for this is within Chapter Y'').  There
+%       is no problem including aims which were not completed, but it is
+%       important to evaluate and/or justify why this is the case.
+% \item Outline any open problems or future plans.  Rather than treat this
+%       only as an exercise in what you {\em could} have done given more
+%       time, try to focus on any unexplored options or interesting outcomes
+%       (e.g., ``my experiment for X gave counter-intuitive results, this
+%       could be because Y and would form an interesting area for further
+%       study'' or ``users found feature Z of my software difficult to use,
+%       which is obvious in hindsight but not during at design stage; to
+%       resolve this, I could clearly apply the technique of Smith [7]'').
+% \end{enumerate}
+
+% =============================================================================
+
+\chapter{Conclusion}
+\label{chap:conclusion}
+
+% =============================================================================
+
+% Finally, after the main matter, the back matter is specified.  This is
+% typically populated with just the bibliography.  LaTeX deals with these
+% in one of two ways, namely
+%
+% - inline, which roughly means the author specifies entries using the
+%   \bibitem macro and typesets them manually, or
+% - using BiBTeX, which means entries are contained in a separate file
+%   (which is essentially a databased) then inported; this is the
+%   approach used below, with the databased being dissertation.bib.
+%
+% Either way, the each entry has a key (or identifier) which can be used
+% in the main matter to cite it, e.g., \cite{X}, \cite[Chapter 2}{Y}.
+
+\backmatter
+
+% -----------------------------------------------------------------------------
+
+% The dissertation concludes with a set of (optional) appendicies; these are
+% the same as chapters in a sense, but once signaled as being appendicies via
+% the associated macro, LaTeX manages them appropriatly.
+
+
+\appendix
+\begin{appendices}
+\chapter{Constant values in the Model}
+\label{appx:example}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Description}              & \textbf{Equation}                                   & \textbf{Value}                                                       \\ \hline
+Socialness loss value             & \ref{eq:1}                                                 & $\gamma_{Socialness}$ = 0.0005                                                     \\ \hline
+Oxytocin loss value               & \ref{eq:1}                                                 & $\gamma_{Oxytocin} = 0.0005$                                                     \\ \hline
+Oxytocin release rate             & \ref{eq:oxy}                                                & c = 0.7                                                        \\ \hline
+Threshold cortisol value          & -                                                   & StressThreshold = 0.5                                                          \\ \hline
+Speed constants                   & \ref{eq:speed}                                                & \begin{tabular}[c]{@{}c@{}} $c_1$ = 1.25\\ $c_2$ = 0.75\end{tabular}      \\ \hline
+Dynamic energy loss value constant       & \ref{eq:energy}                                                & c = 0.0006                                                       \\ \hline
+Direction change constants        & \ref{eq:dir}                                               & \begin{tabular}[c]{@{}c@{}} $c_1$ = 1.5\\ $c_2$ = 1\end{tabular}          \\ \hline
+TactileIntensity calculation      & \ref{eq:tac}                                                & c = 2.5                                                        \\ \hline
+Socialness increase               & \ref{eq:sc}                                               & c = 0.15                                                       \\ \hline
+Cortisol change during grooming   & \ref{eq:ctg}                                                & c = 0.2                                                        \\ \hline
+Cortisol change during aggression & \ref{eq:cta} & $c_1$ = $c_2$ = 0.15                                               \\ \hline
+Cortisol release constant         & \ref{eq:ctr}                                                & c = 0.0025                                                       \\ \hline
+Variable DSI changes              & \ref{eq:dsic}                                                & \begin{tabular}[c]{@{}c@{}} $c_1$ = 0.3\\ $c_2$ = 0.15\end{tabular} \\ \hline
+DSI decay                         & \ref{eq:dsid}                                                & c = 0.9997                                                       \\ \hline
+Food bite size               & -                                               & c = 0.01                                                       \\ \hline
+Food regeneration rate               & -                                               & c = 0.001                                                       \\ \hline
+\end{tabular}
+\caption{Constant values included in the model}
+\label{constants}
+\end{table}
+\end{appendices}
+
+% Content which is not central to, but may enhance the dissertation can be
+% included in one or more appendices; examples include, but are not limited
+% to
+
+% \begin{itemize}
+% \item lengthy mathematical proofs, numerical or graphical results which
+%       are summarised in the main body,
+% \item sample or example calculations,
+%       and
+% \item results of user studies or questionnaires.
+% \end{itemize}
+
+% \noindent
+% Note that in line with most research conferences, the marking panel is not
+% obliged to read such appendices.
+
+% =============================================================================
+
+\bibliography{dissertation}
+
+\end{document}

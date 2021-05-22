@@ -95,7 +95,7 @@ func main() {
 			log.Fatal(errDSI)
 		}
 
-		// initialise agents from 1 to 6
+		// initialise agents from 1 to numOfAgents
 		for i := 1; i < numberOfAgents+1; i++ {
 			x, y := randomFloat(float64(w)), randomFloat(float64(h))
 			addAgent(x, y, i, i, numberOfAgents, a, grid2D, chVar, false, cortisolThresholdCondition, DSImode)
@@ -127,7 +127,7 @@ func main() {
 		}
 
 		// get current time for datafile name
-		//t := time.Now()
+		// t := time.Now()
 
 		//chan to make sure we finish writing before finishing
 		finished := make(chan bool)

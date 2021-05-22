@@ -147,7 +147,7 @@ if num_of_experiments == 2:
 else:
     if num_of_metrics == 1:
         if num_of_differences == 1:
-            print("Kruskall-Wallis test (non-parametric ANOVA equivalent)")
+            print("Kruskal-Wallis test (non-parametric ANOVA equivalent)")
             _, p_value = stats.kruskal(*data_list[0])
         else:
             print("2-way ANOVA on n > 2 experiments")
@@ -203,3 +203,4 @@ elif p_value < 0.1:
     print("Statistical significance at 0.1 level")
 else:
     print("The results are not statistically significant")
+    print("p value = " + str(p_value))

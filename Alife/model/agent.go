@@ -149,6 +149,9 @@ func (a *Agent) actionSelection(){
 	foods, agents, walls := a.inVision()
 	// food
 	foodSalience := float64(len(foods))
+
+
+
 	energyErr := 1 - a.energy
 	eatMotivation := energyErr + (energyErr * foodSalience)
 	// social
@@ -328,7 +331,7 @@ func (a *Agent) findEatFood(agents, foods, walls []lib.Agent){
 		flag2 := false
 		for _, temp := range agents {
 			tmpAgentVal := a.agentVal(temp.(*Agent))
-			if tmpAgentVal < 1 && a.stressed {
+			if tmpAgentVal < 0 && a.stressed {
 				if randBool() {
 					a.move(mod(a.direction-(90*1.5*a.cortisol), 360))
 				} else {
@@ -532,22 +535,32 @@ func (a *Agent) updateCT(sumOfErrors float64, agents, foods []lib.Agent){
 	finalAgentVal := 0.0
 	if len(agents) > 0 {
 		agentVal := -1.0
+		rankDiff := 0.0
 		bond := 0.0
+		DSI := 0.0
 		for _, temp := range agents {
-			for _, id := range a.bondPartners{
+			for i, id := range a.bondPartners{
 				if temp.ID() == id {
 					// there is a bond
 					bond = 1.0
+					tmpDSI := a.DSIstrengths[i]
+					if tmpDSI > DSI {
+						DSI = tmpDSI
+					}
 					break
 				}
 			}
-			tmpAgentVal := a.normalisedAgentVal(temp.(*Agent))
+			tmpRankDiff := float64(temp.(*Agent).Rank() - a.rank)/float64(a.numOfAgents-1)
+			tmpAgentVal := a.agentVal(temp.(*Agent))
 			if tmpAgentVal >= agentVal {
 				agentVal = tmpAgentVal
 			}
+			if tmpRankDiff >= rankDiff {
+				rankDiff = tmpRankDiff
+			}
 		}
-		availableAgents = (1 - agentVal) + bond * a.oxytocin
-		finalAgentVal = -1 * agentVal
+		availableAgents = (1 - rankDiff) + bond * DSI * a.oxytocin
+		finalAgentVal = agentVal
 	}
 
 	if len(foods) > 0 && finalAgentVal >= 0{
@@ -592,9 +605,9 @@ func (a *Agent) inVision() ([]lib.Agent,[]lib.Agent,[]lib.Agent){
 }
 
 /*
-________________________________________________________________________________________________________________________
-___________________________________________SETUP/GETTERS/SETTERS________________________________________________________
-________________________________________________________________________________________________________________________
+   ________________________________________________________________________________________________________________________
+   ___________________________________________SETUP/GETTERS/SETTERS________________________________________________________
+   ________________________________________________________________________________________________________________________
 */
 
 func inList(element int, list []int) bool {

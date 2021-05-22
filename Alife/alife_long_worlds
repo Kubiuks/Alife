@@ -2,11 +2,11 @@
 
 set -e
 
-go run main.go 10 Static 6 [] Fixed
-python3 graph.py 10 Static 6 [] Fixed
+go run main.go 50 Static 6 [] Fixed
+python3 graph.py 50 Static 6 [] Fixed
 
-go run main.go 10 Seasonal 6 [] Fixed
-python3 graph.py 10 Seasonal 6 [] Fixed
+go run main.go 50 Seasonal 6 [] Fixed
+python3 graph.py 50 Seasonal 6 [] Fixed
 
-go run main.go 10 Extreme 6 [] Fixed
-python3 graph.py 10 Extreme 6 [] Fixed
+go run main.go 50 Extreme 6 [] Fixed
+python3 graph.py 50 Extreme 6 [] Fixed

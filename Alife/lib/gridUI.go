@@ -35,22 +35,38 @@ func (g *GridWidget) Draw(m *image.RGBA) {
 	r := g.image.Bounds()
 	draw.Draw(m, r, g.image, image.ZP, draw.Src)
 	gridColor := image.NewUniform(color.RGBA{90, 90, 90, 0})
-	// Vertical lines.
-	x := 10
-	y := 10
-	wid := 1
-	for i := 0; i < g.Cols; i++ {
-		r := image.Rect(x, y, x+wid, y+(g.Rows-1)*g.SquareSize)
-		draw.Draw(m, r, gridColor, image.ZP, draw.Src)
-		x += g.SquareSize
-	}
-	// Horizontal lines.
-	x = 10
-	for i := 0; i < g.Rows; i++ {
-		r := image.Rect(x, y, x+(g.Cols-1)*g.SquareSize+wid, y+wid)
-		draw.Draw(m, r, gridColor, image.ZP, draw.Src)
-		y += g.SquareSize
-	}
+	//// Vertical lines.
+	//x := 10
+	//y := 10
+	//wid := 1
+	//for i := 0; i < g.Cols; i++ {
+	//	r := image.Rect(x, y, x+wid, y+(g.Rows-1)*g.SquareSize)
+	//	draw.Draw(m, r, gridColor, image.ZP, draw.Src)
+	//	x += g.SquareSize
+	//}
+	//// Horizontal lines.
+	//x = 10
+	//for i := 0; i < g.Rows; i++ {
+	//	r := image.Rect(x, y, x+(g.Cols-1)*g.SquareSize+wid, y+wid)
+	//	draw.Draw(m, r, gridColor, image.ZP, draw.Src)
+	//	y += g.SquareSize
+	//}
+
+
+
+	// only borders
+	wid := 8
+	rTop := image.Rect(10, 10, 10+(g.Cols-1)*g.SquareSize+1, 10+wid)
+	draw.Draw(m, rTop, gridColor, image.ZP, draw.Src)
+
+	rBot := image.Rect(10, 802, 10+(g.Cols-1)*g.SquareSize+8, 802+wid)
+	draw.Draw(m, rBot, gridColor, image.ZP, draw.Src)
+
+	rLeft := image.Rect(10, 10, 10+wid, 10+(g.Rows-1)*g.SquareSize)
+	draw.Draw(m, rLeft, gridColor, image.ZP, draw.Src)
+
+	rRight := image.Rect(802, 10, 802+wid, 10+(g.Rows-1)*g.SquareSize)
+	draw.Draw(m, rRight, gridColor, image.ZP, draw.Src)
 
 	for i := 0; i < g.Cols; i++ {
 		for j := 0; j < g.Rows; j++ {
